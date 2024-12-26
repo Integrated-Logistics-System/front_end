@@ -1,0 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* 사용자 정의 색상 */
+  --background: #f0f0f0; /* 라이트 모드 배경 */
+  --foreground: #333333; /* 라이트 모드 전경(텍스트) */
+  --primary: #007bff; /* 주요 색상 */
+  --secondary: #6c757d; /* 보조 색상 */
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: 'Inter', sans-serif; /* Tailwind에서 사용하는 폰트 */
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Poppins', sans-serif; /* 제목에만 다른 폰트 적용 */
+}
+
+button {
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+button:hover {
+  background-color: var(--secondary);
+}
