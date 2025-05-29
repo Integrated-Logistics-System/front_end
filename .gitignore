@@ -1,1 +1,9 @@
 node_modules
+# .next 빌드 파일들 제외
+.next/cache/
+.next/server/
+.next/static/
+
+# IDE 설정 파일들
+.idea/
+.vscode/
