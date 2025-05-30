@@ -1,4 +1,4 @@
-// File: /Users/choeseonghyeon/Downloads/location-chat-recommender/app/layout.tsx
+// File: /Users/choeseonghyeon/front_end/app/layout.tsx
 import * as entry from '../../../app/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

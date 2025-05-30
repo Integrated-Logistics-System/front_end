@@ -1,252 +1,332 @@
-# 🧠 TaskMind AI - Frontend
+# TaskMind Frontend
 
-TaskMind AI의 프론트엔드는 LangGraph 워크플로우 기반 AI 할 일 관리 시스템입니다. 자연어로 할 일을 입력하면 Qwen 2.5 모델이 0.5초 만에 분석하고 구조화된 할 일로 변환합니다.
+TaskMind의 프론트엔드 애플리케이션입니다. Next.js 14, TypeScript, Tailwind CSS를 기반으로 구축되었으며, AI 기반 작업 관리 기능을 제공합니다.
 
-## ✨ 주요 기능
+## 🚀 주요 기능
 
-### 🤖 **AI 기반 기능**
-- **자연어 할 일 입력**: "내일까지 김팀장님께 보고서 제출하기"
-- **LangGraph 워크플로우**: 정보추출 → 우선순위분석 → 검증 → 결과
-- **실시간 AI 분석**: 0.5초 내 처리 완료
-- **지능적 확인**: 신뢰도 기반 사용자 확인 요청
+### 📋 작업 관리
+- **AI 기반 자연어 작업 생성**: "내일까지 보고서 작성하기"와 같은 자연어로 작업 생성
+- **스마트 우선순위 제안**: AI가 작업의 중요도를 자동으로 분석하여 우선순위 제안
+- **실시간 작업 상태 관리**: 할 일, 진행 중, 완료, 취소 상태 관리
+- **마감일 및 알림 설정**: 작업 마감일 설정 및 리마인더 기능
+- **태그 기반 분류**: 작업을 태그로 분류하고 필터링
 
-### 📋 **할 일 관리**
-- **스마트 우선순위**: AI가 자동으로 urgent/high/medium/low 분류
-- **자동 태그 생성**: 내용 기반 태그 자동 추출
-- **진행 상황 추적**: 실시간 완료율 및 통계
-- **지연 작업 알림**: 마감일 기반 자동 알림
+### 📁 프로젝트 관리
+- **프로젝트별 작업 그룹화**: 관련 작업들을 프로젝트로 묶어 관리
+- **진행률 시각화**: 프로젝트별 완료율과 진행 상황을 시각적으로 표시
+- **프로젝트 색상 커스터마이징**: 각 프로젝트별 고유 색상 설정
 
-### 🎨 **사용자 경험**
-- **Modern UI**: shadcn/ui 기반 깔끔한 디자인
-- **반응형 디자인**: 모바일/태블릿/데스크톱 최적화
-- **다크모드 지원**: 시스템 테마 자동 감지
-- **실시간 피드백**: 로딩 상태 및 성공/에러 알림
+### 🤖 AI 어시스턴트
+- **LangGraph 기반 고급 워크플로우**: 조건부 분기와 스마트 에러 처리
+- **대화형 AI 인터페이스**: 자연스러운 대화를 통한 작업 관리 지원
+- **작업 패턴 분석**: 사용자의 작업 패턴을 분석하여 개선 제안
+- **프로젝트 인사이트 생성**: AI가 프로젝트 현황을 분석하여 인사이트 제공
+
+### 📊 대시보드
+- **실시간 통계**: 전체 작업, 완료율, 지연된 작업 등 주요 지표
+- **오늘 할 일**: 당일 마감 작업 목록
+- **지연된 작업**: 마감일이 지난 작업들을 한눈에 확인
+- **다가오는 작업**: 향후 일주일 내 마감 예정 작업들
 
 ## 🛠️ 기술 스택
 
-- **Framework**: Next.js 15 (App Router)
+- **Framework**: Next.js 14 (App Router)
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
-- **UI Components**: shadcn/ui + Radix UI
 - **State Management**: Zustand
-- **HTTP Client**: Fetch API
-- **Date Handling**: date-fns
+- **HTTP Client**: Axios
+- **UI Components**: Radix UI + Custom Components
+- **Form Handling**: React Hook Form + Zod
+- **Notifications**: React Hot Toast
 - **Icons**: Lucide React
-- **Notifications**: Sonner
+- **Data Fetching**: TanStack Query (React Query)
+
+## 📁 프로젝트 구조
+
+```
+src/
+├── components/          # 재사용 가능한 컴포넌트
+│   ├── ui/             # 기본 UI 컴포넌트 (Button, Input, Card 등)
+│   └── layout/         # 레이아웃 컴포넌트 (Sidebar, Header 등)
+├── lib/                # 유틸리티 및 설정
+│   ├── api.ts          # API 클라이언트
+│   └── utils.ts        # 헬퍼 함수들
+├── stores/             # Zustand 상태 관리
+│   ├── auth.ts         # 인증 상태
+│   ├── tasks.ts        # 작업 상태
+│   └── projects.ts     # 프로젝트 상태
+├── types/              # TypeScript 타입 정의
+│   └── index.ts        # 전역 타입들
+├── hooks/              # 커스텀 React 훅
+└── utils/              # 헬퍼 유틸리티 함수
+
+app/                    # Next.js App Router
+├── (auth)/            # 인증 관련 페이지
+│   ├── login/         # 로그인 페이지
+│   └── register/      # 회원가입 페이지
+├── (dashboard)/       # 대시보드 레이아웃
+│   ├── dashboard/     # 메인 대시보드
+│   ├── tasks/         # 작업 관리 페이지
+│   ├── projects/      # 프로젝트 관리 페이지
+│   └── ai/           # AI 어시스턴트 페이지
+├── globals.css        # 전역 스타일
+├── layout.tsx         # 루트 레이아웃
+├── page.tsx          # 홈 페이지
+└── providers.tsx     # 전역 프로바이더
+```
 
 ## 🚀 설치 및 실행
 
 ### 1. 의존성 설치
 ```bash
-cd /Users/choeseonghyeon/front_end
 npm install
 ```
 
 ### 2. 환경 변수 설정
-`.env.local` 파일이 이미 설정되어 있습니다:
+`.env.local` 파일을 생성하고 다음 환경 변수를 설정하세요:
+
 ```env
-NEXT_PUBLIC_API_BASE_URL=http://localhost:3000/api
+NEXT_PUBLIC_API_URL=http://localhost:3001
+NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
 ### 3. 개발 서버 실행
 ```bash
+# 개발 서버 시작
 npm run dev
+
+# 또는 편의 스크립트 사용
+./start-frontend.sh
 ```
 
-### 4. 프로덕션 빌드
+### 4. 빌드 및 배포
 ```bash
+# 프로덕션 빌드
 npm run build
+
+# 빌드된 앱 실행
 npm start
+
+# 타입 검사
+npm run type-check
+
+# 린트 검사
+npm run lint
 ```
-
-## 📱 주요 페이지 구조
-
-```
-app/
-├── page.tsx                  # 랜딩 페이지
-├── dashboard/
-│   ├── page.tsx             # 메인 대시보드
-│   ├── tasks/               # 할 일 관리
-│   ├── projects/            # 프로젝트 관리
-│   └── ai-chat/             # AI 어시스턴트
-```
-
-## 🧩 주요 컴포넌트
-
-### **TaskInput.tsx**
-- 자연어 할 일 입력 컴포넌트
-- LangGraph 워크플로우 결과 표시
-- 신뢰도 기반 확인/수정 인터페이스
-
-### **TaskList.tsx**
-- 할 일 목록 표시
-- 우선순위/상태별 정렬
-- 체크박스로 완료 처리
-
-### **WorkflowResultDisplay**
-- AI 분석 결과 시각화
-- 신뢰도, 처리시간, 제안사항 표시
-- 확인/거부 액션
-
-## 🔄 API 연동
-
-### **주요 엔드포인트**
-```typescript
-// 자연어 할 일 생성
-POST /api/tasks/natural-language
-{
-  "input": "내일까지 김팀장님께 보고서 제출하기"
-}
-
-// LangGraph 워크플로우 테스트
-POST /api/ai/test-workflow
-{
-  "input": "긴급한 회의 준비하기"
-}
-
-// 할 일 목록 조회
-GET /api/tasks
-
-// AI 질문 답변
-POST /api/ai/ask
-{
-  "question": "오늘 가장 중요한 작업은?",
-  "context": "현재 진행 중인 프로젝트"
-}
-```
-
-## 🎯 사용법
-
-### **1. 자연어로 할 일 추가**
-```
-입력: "다음 주 화요일까지 김팀장님께 프로젝트 보고서 제출하기"
-
-AI 분석 결과:
-- 제목: 김팀장님께 프로젝트 보고서 제출하기
-- 마감일: 2024-06-04
-- 우선순위: high
-- 태그: #보고서, #프로젝트
-- 신뢰도: 92%
-```
-
-### **2. 워크플로우 과정 시각화**
-```
-자연어 입력 → [정보추출 0.2초] → [우선순위분석 0.2초] → [검증 0.1초] → 결과
-                    ↓                    ↓                   ↓
-               신뢰도 계산        조건부 확인 여부    최종 제안사항
-```
-
-### **3. 스마트 확인 시스템**
-- **높은 신뢰도 (80% 이상)**: 자동 생성
-- **중간 신뢰도 (60-80%)**: 확인 후 생성
-- **낮은 신뢰도 (60% 미만)**: 수정 제안 + 확인 필요
 
 ## 🔧 개발 가이드
 
-### **새 컴포넌트 추가**
-```bash
-# shadcn/ui 컴포넌트 추가
-npx shadcn-ui@latest add [component-name]
+### 새로운 페이지 추가
+1. `app/` 디렉토리에 폴더 생성
+2. `page.tsx` 파일로 페이지 컴포넌트 작성
+3. 필요시 `layout.tsx`로 레이아웃 정의
 
-# 새 페이지 생성
-mkdir app/dashboard/new-page
-touch app/dashboard/new-page/page.tsx
+### 새로운 컴포넌트 추가
+1. `src/components/` 에 컴포넌트 파일 생성
+2. TypeScript 인터페이스 정의
+3. `src/components/ui/` 에는 재사용 가능한 기본 컴포넌트 배치
+
+### 상태 관리
+- **Zustand** 스토어를 `src/stores/` 에 정의
+- API 호출과 로컬 상태를 함께 관리
+- 타입 안전성을 위해 TypeScript 인터페이스 활용
+
+### API 연동
+- `src/lib/api.ts`의 `ApiClient` 클래스 사용
+- 모든 API 엔드포인트가 타입 안전하게 정의됨
+- 자동 토큰 관리 및 에러 처리 포함
+
+## 🎨 스타일링 가이드
+
+### Tailwind CSS 클래스 사용
+```tsx
+// 좋은 예
+<div className="flex items-center space-x-4 p-6 bg-white rounded-lg shadow-sm">
+  <h1 className="text-2xl font-bold text-gray-900">제목</h1>
+</div>
+
+// cn() 유틸리티로 조건부 클래스
+<Button className={cn(
+  "base-classes",
+  isActive && "active-classes",
+  variant === "primary" && "primary-classes"
+)}>
 ```
 
-### **상태 관리**
-```typescript
-// Zustand 스토어 사용
-import { useTaskStore } from '@/stores/tasks'
+### 컴포넌트 디자인 원칙
+- **일관성**: 전체 앱에서 동일한 디자인 패턴 사용
+- **접근성**: ARIA 속성과 키보드 네비게이션 지원
+- **반응형**: 모바일부터 데스크톱까지 모든 화면 크기 지원
+- **로딩 상태**: 모든 비동기 작업에 적절한 로딩 인디케이터 제공
 
-function MyComponent() {
-  const { tasks, fetchTasks, createTask } = useTaskStore()
-  
-  useEffect(() => {
-    fetchTasks()
-  }, [fetchTasks])
-}
+## 🔐 인증 시스템
+
+### JWT 토큰 기반 인증
+- 로그인 시 액세스 토큰을 localStorage에 저장
+- API 요청 시 자동으로 Bearer 토큰 헤더 추가
+- 토큰 만료 시 자동 로그아웃 및 로그인 페이지 리다이렉트
+
+### 보호된 라우트
+- `(dashboard)` 그룹의 모든 페이지는 인증 필요
+- 미인증 사용자는 자동으로 로그인 페이지로 리다이렉트
+- 인증 상태는 Zustand 스토어에서 전역 관리
+
+## 🤖 AI 기능 활용
+
+### 자연어 작업 생성
+```typescript
+// 자연어로 작업 생성
+await createTaskFromNaturalLanguage("내일까지 보고서 작성하고 팀에게 공유하기")
+
+// AI가 자동으로 파싱하여 구조화된 작업 생성:
+// - 제목: "보고서 작성하고 팀에게 공유"
+// - 마감일: 내일
+// - 우선순위: AI가 판단
+// - 태그: ["보고서", "공유"]
 ```
 
-### **API 호출**
+### AI 대화 인터페이스
 ```typescript
-// API 클라이언트 사용
-import apiClient from '@/lib/api'
-
-const result = await apiClient.createTaskFromNaturalLanguage({
-  input: "자연어 입력"
+// 대화형 AI와 상호작용
+await conversation({
+  message: "오늘 할 일을 정리해줘",
+  conversationHistory: [...],
+  context: { userId, currentTasks }
 })
 ```
 
-## 🎨 디자인 시스템
+## 📱 반응형 디자인
 
-### **컬러 팔레트**
-- **Primary**: Blue (AI/기술 느낌)
-- **Success**: Green (완료/성공)
-- **Warning**: Orange/Yellow (주의/대기)
-- **Danger**: Red (긴급/오류)
-- **Neutral**: Gray (기본/비활성)
+### 브레이크포인트
+- **모바일**: `< 768px` - 스택형 레이아웃, 단일 컬럼
+- **태블릿**: `768px - 1024px` - 2컬럼 그리드, 축소된 사이드바
+- **데스크톱**: `> 1024px` - 전체 레이아웃, 사이드바 고정
 
-### **우선순위 색상**
-- **Urgent**: 🔴 Red (즉시 처리)
-- **High**: 🟠 Orange (중요함)
-- **Medium**: 🔵 Blue (보통)
-- **Low**: ⚫ Gray (나중에)
+### 모바일 최적화
+- 터치 친화적인 버튼 크기 (최소 44px)
+- 스와이프 제스처 지원
+- 모바일 네비게이션 메뉴
+- 적응형 폰트 크기
 
-## 🚀 성능 최적화
+## 🚨 에러 처리
 
-### **이미 적용된 최적화**
-- **Next.js App Router**: 빠른 네비게이션
-- **TypeScript**: 컴파일 타임 에러 방지
-- **shadcn/ui**: 트리 쉐이킹으로 번들 크기 최적화
-- **Zustand**: 가벼운 상태 관리
-- **Lazy Loading**: 컴포넌트 지연 로딩
+### 전역 에러 처리
+- API 에러는 자동으로 toast 알림으로 표시
+- 네트워크 에러 시 재시도 옵션 제공
+- 401 에러 시 자동 로그아웃 처리
 
-### **향후 개선 계획**
-- **React Query**: 서버 상태 캐싱
-- **Virtual Scrolling**: 대량 할 일 목록 처리
-- **PWA**: 오프라인 지원
-- **WebSocket**: 실시간 동기화
-
-## 🔗 백엔드 연동
-
-현재 백엔드 서버가 `http://localhost:3000`에서 실행 중이어야 합니다:
-
-```bash
-# 백엔드 실행 (별도 터미널)
-cd /Users/choeseonghyeon/back_end
-./start-langgraph.sh
-
-# 프론트엔드 실행 (현재 터미널)
-cd /Users/choeseonghyeon/front_end
-npm run dev
+### 사용자 친화적 오류 메시지
+```tsx
+// 에러 상태 표시 예시
+{error && (
+  <div className="text-center py-12">
+    <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+    <p className="text-red-600">{error}</p>
+    <Button onClick={retry} className="mt-4">
+      다시 시도
+    </Button>
+  </div>
+)}
 ```
 
-## 🎯 주요 특징
+## 🔄 상태 관리 패턴
 
-### **AI 워크플로우 시각화**
-- 각 단계별 처리 시간 표시
-- 신뢰도 기반 색상 코딩
-- 실시간 상태 업데이트
+### Zustand 스토어 구조
+```typescript
+interface TaskState {
+  // 데이터
+  tasks: Task[]
+  selectedTask: Task | null
+  
+  // UI 상태
+  isLoading: boolean
+  error: string | null
+  
+  // 액션
+  fetchTasks: () => Promise<void>
+  createTask: (data: CreateTaskRequest) => Promise<Task>
+  updateTask: (id: string, data: UpdateTaskRequest) => Promise<void>
+}
+```
 
-### **사용자 경험 최적화**
-- 0.5초 내 AI 응답
-- 부드러운 애니메이션
-- 직관적인 인터페이스
-- 명확한 피드백
+### 낙관적 업데이트
+- 사용자 경험 향상을 위해 즉시 UI 업데이트
+- 서버 응답 실패 시 자동 롤백
+- 로딩 상태 최소화
 
-### **접근성**
-- 키보드 네비게이션 지원
-- 스크린 리더 호환
-- 고대비 모드 지원
-- 반응형 디자인
+## 📊 성능 최적화
 
-## 🎉 완성된 기능
+### Next.js 최적화 기능
+- **App Router**: 최신 Next.js 라우팅 시스템
+- **이미지 최적화**: next/image 컴포넌트 사용
+- **폰트 최적화**: next/font로 웹폰트 최적화
+- **번들 분석**: 코드 스플리팅 자동 적용
 
-✅ **랜딩 페이지**: TaskMind AI 소개  
-✅ **대시보드**: 할 일 통계 및 현황  
-✅ **자연어 입력**: LangGraph 워크플로우 연동  
-✅ **할 일 목록**: CRUD + 우선순위 정렬  
-✅ **AI 결과 표시**: 신뢰도 기반 확인 시스템  
-✅ **반응형 디자인**: 모바일/데스크톱 최적화  
+### 컴포넌트 최적화
+- **React.memo**: 불필요한 리렌더링 방지
+- **useMemo/useCallback**: 비싼 계산 캐싱
+- **Lazy Loading**: 대용량 컴포넌트 지연 로딩
 
-TaskMind AI 프론트엔드로 더 스마트한 할 일 관리를 경험해보세요! 🚀
+## 🧪 테스트 가이드
+
+### 테스트 전략
+- **단위 테스트**: 유틸리티 함수 및 훅
+- **컴포넌트 테스트**: React Testing Library 사용
+- **E2E 테스트**: 주요 사용자 플로우
+- **타입 검사**: TypeScript로 컴파일 타임 오류 방지
+
+### 테스트 명령어
+```bash
+# 단위 테스트 실행
+npm run test
+
+# 테스트 커버리지 확인
+npm run test:coverage
+
+# E2E 테스트 실행
+npm run test:e2e
+```
+
+## 🚀 배포 가이드
+
+### Vercel 배포 (권장)
+1. GitHub 리포지토리 연결
+2. 환경 변수 설정
+3. 자동 배포 설정
+
+### 환경별 설정
+```bash
+# 개발 환경
+NEXT_PUBLIC_API_URL=http://localhost:3001
+
+# 스테이징 환경
+NEXT_PUBLIC_API_URL=https://api-staging.taskmind.com
+
+# 프로덕션 환경
+NEXT_PUBLIC_API_URL=https://api.taskmind.com
+```
+
+## 🤝 기여 가이드
+
+### 개발 플로우
+1. 새 기능 브랜치 생성: `git checkout -b feature/새기능`
+2. 코드 작성 및 테스트
+3. 커밋 메시지 규칙 준수: `feat: 새로운 기능 추가`
+4. Pull Request 생성
+5. 코드 리뷰 후 병합
+
+### 코드 스타일
+- **Prettier**: 자동 코드 포맷팅
+- **ESLint**: 코드 품질 검사
+- **TypeScript**: 타입 안전성 보장
+- **Husky**: Git 훅으로 품질 관리
+
+## 📞 지원 및 문의
+
+- **이슈 리포트**: GitHub Issues 사용
+- **기능 요청**: Discussion 탭 활용
+- **보안 문제**: 비공개 이메일로 연락
+
+---
+
+**TaskMind Frontend**는 현대적인 웹 기술과 AI를 결합하여 사용자에게 최고의 작업 관리 경험을 제공합니다. 🚀
