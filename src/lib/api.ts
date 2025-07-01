@@ -47,7 +47,7 @@ class ApiClient {
             localStorage.removeItem('user');
           }
           toast.error('로그인이 필요합니다.');
-          window.location.href = '/auth/login';
+          window.location.href = '/';
         } else if (error.response?.status >= 500) {
           toast.error('서버 오류가 발생했습니다.');
         } else if (error.response?.data?.message) {

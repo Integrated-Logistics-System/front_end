@@ -31,7 +31,7 @@ class RecipeService {
         if (error.response?.status === 401) {
           localStorage.removeItem('auth_token');
           localStorage.removeItem('user_data');
-          window.location.href = '/auth/login';
+          window.location.href = '/';
         }
         return Promise.reject(error);
       }

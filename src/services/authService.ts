@@ -53,7 +53,7 @@ class AuthService {
   // Login
   async login(email: string, password: string): Promise<ApiResponse> {
     try {
-      const response = await this.api.post('/auth/login', {
+      const response = await this.api.post('/', {
         email,
         password,
       });

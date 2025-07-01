@@ -1,204 +1,176 @@
-# AI Recipe Assistant Frontend 🍽️
+# 🌐 Recipe AI - Frontend
 
-개인 알레르기 프로필 기반 안전한 레시피 추천 AI 시스템의 프론트엔드입니다.
+Next.js 기반 AI 레시피 채팅 인터페이스
+
+## 📋 프로젝트 개요
+
+**기술 스택**: Next.js 14 + TypeScript + TailwindCSS + Socket.IO + React Query
+**핵심 기능**: 실시간 AI 채팅, 스트리밍 응답, 사용자 인증, 반응형 UI
+
+## 🏗 아키텍처
+
+```
+Next.js Frontend ←→ Nginx Proxy ←→ NestJS Backend
+        ↓                ↓              ↓
+   React Components   Load Balancing   WebSocket API
+        ↓                ↓              ↓  
+   Socket.IO Client   Static Caching   AI Processing
+        ↓                ↓              ↓
+   Real-time Chat    Performance      LangChain
+```
 
 ## 🚀 주요 기능
 
-- **🔍 스마트 레시피 검색**: 23만개+ 레시피 데이터베이스에서 실시간 검색
-- **🛡️ 알레르기 안전 보장**: 개인 알레르기 프로필 기반 자동 필터링
-- **🤖 AI 채팅**: 자연어로 요리 상담 및 레시피 추천
-- **👤 개인화 프로필**: 알레르기, 선호도, 식단 관리
-- **📱 반응형 디자인**: 모바일, 태블릿, 데스크톱 최적화
+### 1. **실시간 AI 채팅 인터페이스**
+- Socket.IO 기반 실시간 통신
+- 스트리밍 응답으로 타이핑 효과
+- 메시지 기록 관리 및 표시
 
-## 🛠️ 기술 스택
+### 2. **사용자 인증 시스템**
+- JWT 기반 로그인/회원가입
+- 알레르기 정보 관리
+- 요리 실력 설정
 
-### Core
-- **Next.js 14** - React 프레임워크 (App Router)
-- **TypeScript** - 타입 안전성
-- **Tailwind CSS** - 유틸리티 기반 스타일링
+### 3. **반응형 UI/UX**
+- TailwindCSS 기반 모던 디자인
+- 다크/라이트 모드 지원
+- 모바일 최적화
 
-### State Management
-- **Recoil** - 상태 관리
-- **TanStack Query** - 서버 상태 관리 및 캐싱
+### 4. **성능 최적화**
+- React Query로 상태 관리
+- Next.js 14 App Router
+- 컴포넌트 코드 스플리팅
 
-### UI/UX
-- **Framer Motion** - 애니메이션
-- **Headless UI** - 접근성 중심 UI 컴포넌트
-- **Heroicons** - 아이콘
-- **Next Themes** - 다크/라이트 모드
+## 🔧 주요 컴포넌트
 
-### API & Authentication
-- **Axios** - HTTP 클라이언트
-- **JWT** - 인증 (쿠키 기반)
-- **React Hot Toast** - 알림
-
-## 📁 프로젝트 구조
-
-```
-src/
-├── app/                    # Next.js App Router 페이지
-│   ├── (auth)/            # 인증 관련 페이지
-│   ├── chat/              # AI 채팅 페이지
-│   ├── profile/           # 사용자 프로필
-│   ├── search/            # 레시피 검색
-│   └── layout.tsx         # 루트 레이아웃
-├── components/            # 재사용 가능한 컴포넌트
-│   ├── ui/               # 기본 UI 컴포넌트
-│   ├── layout/           # 레이아웃 컴포넌트
-│   ├── home/             # 홈페이지 섹션
-│   └── recipe/           # 레시피 관련 컴포넌트
-├── hooks/                # 커스텀 React 훅
-├── lib/                  # 유틸리티 및 설정
-├── store/                # Recoil 상태 관리
-└── types/                # TypeScript 타입 정의
+### **ChatInterface** - 채팅 인터페이스
+```typescript
+- 실시간 메시지 송수신
+- 스트리밍 응답 렌더링
+- 메시지 기록 표시
+- 타이핑 상태 표시
 ```
 
-## 🚀 빠른 시작
-
-### 1. 의존성 설치
-```bash
-npm install
+### **AuthSystem** - 인증 시스템
+```typescript
+- 로그인/회원가입 폼
+- JWT 토큰 관리
+- 보호된 라우트
+- 사용자 프로필 관리
 ```
 
-### 2. 환경 변수 설정
-`.env.local` 파일을 생성하고 다음 내용을 추가하세요:
-
-```bash
-NEXT_PUBLIC_API_URL=http://localhost:8081/api
-NEXT_PUBLIC_WS_URL=http://localhost:8081
+### **RecipeDisplay** - 레시피 표시
+```typescript
+- AI 응답 마크다운 렌더링
+- 레시피 카드 UI
+- 알레르기 정보 표시
+- 즐겨찾기 기능
 ```
 
-### 3. 개발 서버 실행
+## 🛠 기술적 특징
+
+### **1. WebSocket 실시간 통신**
+```typescript
+const socket = io(WEBSOCKET_URL, {
+  auth: { token: getAuthToken() }
+});
+
+socket.on('chat-stream', (data) => {
+  // 실시간 스트리밍 응답 처리
+});
+```
+
+### **2. React Query 상태 관리**
+```typescript
+const { data, isLoading } = useQuery({
+  queryKey: ['chatHistory', userId],
+  queryFn: () => fetchChatHistory(userId)
+});
+```
+
+### **3. Next.js 최적화**
+```typescript
+// App Router + Server Components
+// 동적 imports로 번들 크기 최적화
+// ISR (Incremental Static Regeneration)
+```
+
+## 🎨 UI/UX 특징
+
+### **모던 인터페이스**
+- 클린한 채팅 UI
+- 부드러운 애니메이션
+- 직관적인 네비게이션
+
+### **접근성**
+- 키보드 네비게이션 지원
+- 스크린 리더 호환
+- 고대비 모드 지원
+
+### **반응형 디자인**
+- 모바일 우선 설계
+- 태블릿 최적화
+- 데스크톱 확장 레이아웃
+
+## 🐳 Docker + Nginx 배포
+
+### **개발 환경**
 ```bash
 npm run dev
 ```
 
-브라우저에서 [http://localhost:3000](http://localhost:3000)을 열어 확인하세요.
-
-## 📋 사용 가능한 스크립트
-
-- `npm run dev` - 개발 서버 실행 (Turbo 모드)
-- `npm run build` - 프로덕션 빌드
-- `npm run start` - 프로덕션 서버 실행
-- `npm run lint` - ESLint 검사
-- `npm run type-check` - TypeScript 타입 검사
-- `npm run format` - Prettier 코드 포맷팅
-
-## 🔧 주요 컴포넌트
-
-### 인증 시스템
-- 회원가입/로그인 (JWT 기반)
-- 프로필 관리
-- 알레르기 설정
-
-### 레시피 검색
-- 실시간 검색
-- 알레르기 필터링
-- 고급 필터 (시간, 태그 등)
-
-### AI 채팅
-- 자연어 대화
-- 레시피 추천
-- 대화 기록 관리
-
-### 사용자 프로필
-- 알레르기 프로필 설정
-- 요리 선호도 관리
-- 즐겨찾기 관리
-
-## 🌐 API 연동
-
-백엔드 API와의 연동을 위해 다음 서비스들을 사용합니다:
-
-```typescript
-// API 클라이언트 설정
-const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
-  timeout: 30000,
-});
-
-// 주요 API 엔드포인트
-- /auth/* - 사용자 인증
-- /recipe/* - 레시피 검색
-- /langchain/* - AI 채팅
-- /allergen/* - 알레르기 체크
-```
-
-## 🎨 디자인 시스템
-
-### 색상 팔레트
-- **Primary**: Orange (f97316)
-- **Secondary**: Amber (f59e0b)
-- **Success**: Green
-- **Warning**: Yellow
-- **Danger**: Red
-
-### 애니메이션
-- 페이지 전환: Fade in/out
-- 카드 호버: Scale & Shadow
-- 로딩: Spinner & Skeleton
-
-## 🔐 보안
-
-- **JWT 토큰**: 쿠키 기반 저장 (7일 만료)
-- **API 인터셉터**: 자동 토큰 갱신
-- **CORS**: 백엔드와 안전한 통신
-- **XSS 방지**: Content Security Policy
-
-## 📱 반응형 디자인
-
-- **Mobile First**: 모바일 우선 설계
-- **Breakpoints**: 
-  - `xs`: 475px
-  - `sm`: 640px
-  - `md`: 768px
-  - `lg`: 1024px
-  - `xl`: 1280px
-  - `2xl`: 1536px
-
-## 🧪 테스팅
-
+### **프로덕션 배포**
 ```bash
-# 타입 체크
-npm run type-check
-
-# 린팅
-npm run lint
-
-# 포맷팅 체크
-npm run format:check
+docker-compose up -d
 ```
 
-## 🚀 배포
-
-### Vercel (권장)
-```bash
-# Vercel CLI 설치
-npm i -g vercel
-
-# 배포
-vercel
+### **Nginx 통합**
+```nginx
+# 리버스 프록시 설정
+# 정적 파일 캐싱
+# 로드 밸런싱
+# Rate limiting
 ```
 
-### 수동 빌드
-```bash
-npm run build
-npm run start
-```
+## 📱 화면 구성
 
-## 📄 라이선스
+### **메인 채팅 화면**
+- 실시간 채팅 인터페이스
+- AI 응답 스트리밍
+- 메시지 기록 표시
 
-이 프로젝트는 개인 포트폴리오 목적으로 제작되었습니다.
+### **사용자 설정**
+- 프로필 정보 수정
+- 알레르기 정보 관리
+- 요리 실력 설정
 
-## 👥 기여
+### **레시피 상세**
+- AI 추천 레시피 표시
+- 재료 및 조리법
+- 알레르기 경고 표시
 
-버그 리포트나 기능 제안은 이슈로 등록해주세요.
+## 🔗 백엔드 연동
+
+- **REST API**: 사용자 인증, 프로필 관리
+- **WebSocket**: 실시간 채팅, 스트리밍 응답
+- **GraphQL**: 복잡한 데이터 조회 (향후 예정)
+
+## 🎯 핵심 차별점
+
+1. **실시간 스트리밍**: 타이핑 효과로 자연스러운 AI 대화
+2. **완전한 반응형**: 모든 디바이스에서 최적화된 경험
+3. **성능 우선**: Next.js 14 + React Query 최적화
+4. **사용자 중심**: 직관적이고 접근성 높은 UI
+
+## 🚀 향후 계획
+
+- PWA 지원
+- 오프라인 모드
+- 음성 인터페이스
+- 다국어 지원
 
 ---
 
-**🔗 관련 링크**
-- [백엔드 저장소](../backend)
-- [API 문서](../docs/api.md)
-- [배포 가이드](../docs/deployment.md)
-
-**✨ 개발자: 최성현**
+**📧 Contact**: 바카티오 Frontend Engineer 지원용 포트폴리오  
+**🌐 Demo**: [Live Demo Link]
+**🚀 Status**: 프로덕션 배포 준비 완료

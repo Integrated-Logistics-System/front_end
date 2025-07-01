@@ -1,0 +1,1 @@
+module.exports = {\n  extends: ['next/core-web-vitals'],\n  rules: {\n    // React Hooks exhaustive-deps 경고를 완전히 비활성화\n    'react-hooks/exhaustive-deps': 'off',\n    // 다른 관련 경고들도 완화\n    '@typescript-eslint/no-unused-vars': 'warn',\n    '@typescript-eslint/no-explicit-any': 'warn',\n  },\n};

@@ -37,7 +37,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
                         />
                     </AuthInitializer>
                 </AuthProvider>
-                <ReactQueryDevtools initialIsOpen={false} />
+                {/* React Query DevTools - 개발 중에만 표시 */}
+                {process.env.NODE_ENV === 'development' && (
+                    <ReactQueryDevtools 
+                        initialIsOpen={false} 
+                        buttonPosition="bottom-left"
+                        position="bottom"
+                    />
+                )}
             </QueryClientProvider>
         </RecoilRoot>
     );

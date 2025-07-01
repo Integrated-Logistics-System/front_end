@@ -13,14 +13,14 @@ export const ROUTES = {
   CHAT: '/chat',
   PROFILE: '/profile',
   AUTH: {
-    LOGIN: '/auth/login',
+    LOGIN: '/',
     REGISTER: '/auth/register',
   },
 } as const;
 
 export const API_ENDPOINTS = {
   AUTH: {
-    LOGIN: '/auth/login',
+    LOGIN: '/',
     REGISTER: '/auth/register',
     PROFILE: '/auth/profile',
   },
@@ -44,7 +44,7 @@ export const API_ENDPOINTS = {
 export const ALLERGEN_TYPES = [
   '글루텐함유곡물',
   '갑각류',
-  '난류',
+  '계란',
   '어류',
   '땅콩',
   '대두',

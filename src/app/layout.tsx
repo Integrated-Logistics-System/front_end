@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { Providers } from '../components/providers';
+import { EnhancedDebugPanel } from '../components/debug/EnhancedDebugPanel';
+import { TokenDebugger } from '../components/debug/TokenDebugger';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -17,9 +19,19 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko" suppressHydrationWarning>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+        <meta name="theme-color" content="#f97316" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+      </head>
       <body className={inter.className} suppressHydrationWarning>
         <Providers>
           {children}
+          {/* 강화된 디버그 패널 */}
+          {process.env.NODE_ENV === 'development' && <EnhancedDebugPanel />}
+          {/* 토큰 매니저 */}
+          {process.env.NODE_ENV === 'development' && <TokenDebugger />}
         </Providers>
       </body>
     </html>

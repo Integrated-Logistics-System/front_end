@@ -140,7 +140,7 @@ export function Header() {
                   </div>
               ) : (
                   <div className="hidden sm:flex items-center space-x-2">
-                    <Link href="/auth/login">
+                    <Link href="/">
                       <Button variant="ghost" size="sm">
                         Login
                       </Button>
@@ -243,7 +243,7 @@ export function Header() {
                         </>
                     ) : (
                         <>
-                          <Link href="/auth/login" onClick={handleCloseMenu}>
+                          <Link href="/" onClick={handleCloseMenu}>
                             <Button variant="ghost" size="sm" className="w-full">
                               Login
                             </Button>

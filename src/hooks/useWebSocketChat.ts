@@ -18,13 +18,16 @@ interface UseWebSocketChatProps {
 export function useWebSocketChat({ userId, token }: UseWebSocketChatProps) {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false); // 인증 상태 추가
-  const [authenticatedUser, setAuthenticatedUser] = useState<any>(null); // 인증된 사용자 정보
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authenticatedUser, setAuthenticatedUser] = useState<any>(null);
   const [isTyping, setIsTyping] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
   const messageBufferRef = useRef<string>('');
+  const historyRequestedRef = useRef<boolean>(false); // 🔥 중복 요청 방지
+  const historyLoadedRef = useRef<boolean>(false); // 🔥 히스토리 로딩 완료 여부
 
   // WebSocket 연결
   const connect = useCallback(() => {
@@ -43,9 +46,13 @@ export function useWebSocketChat({ userId, token }: UseWebSocketChatProps) {
 
     try {
       console.log('🔗 Connecting to WebSocket...');
+      
+      // 🔥 상태 초기화
+      historyRequestedRef.current = false;
+      historyLoadedRef.current = false; // 🔥 히스토리 로딩 상태 초기화
+      setIsLoadingHistory(false);
 
-// frontend/src/hooks/useWebSocketChat.ts 수정
-      const newSocket = io(process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:8081', {
+      const newSocket = io(process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:8083', {
         auth: {
           token: token
         },
@@ -62,8 +69,8 @@ export function useWebSocketChat({ userId, token }: UseWebSocketChatProps) {
         setIsConnected(true);
         setConnectionError(null);
         
-        // 개인 채팅방 참여
-        newSocket.emit('join-personal-chat');
+        // 🔥 인증 완료 후에 join-personal-chat을 보내도록 변경
+        console.log('⏳ Waiting for authentication confirmation...');
       });
 
       // 연결 확인
@@ -76,61 +83,102 @@ export function useWebSocketChat({ userId, token }: UseWebSocketChatProps) {
           setAuthenticatedUser(data.user);
           setConnectionError(null);
           console.log('✅ 인증 성공:', data.user.email);
+          
+          // 🔥 인증 성공 후 join-personal-chat 전송 (한 번만)
+          if (!historyRequestedRef.current && !historyLoadedRef.current) {
+            console.log('📥 Now joining personal chat after authentication...');
+            newSocket.emit('join-personal-chat');
+            
+            console.log('🔄 Starting chat history loading...');
+            setIsLoadingHistory(true);
+            historyRequestedRef.current = true;
+            
+            // 🔥 강화된 안전장치: 3초 후에도 히스토리가 안 오면 빈 상태로 설정
+            setTimeout(() => {
+              if (isLoadingHistory && !historyLoadedRef.current) {
+                console.warn('⏰ Chat history loading timeout - setting empty messages for first time chat');
+                setIsLoadingHistory(false);
+                setMessages([]);
+                historyRequestedRef.current = false;
+                historyLoadedRef.current = true; // 🔥 타임아웃도 로딩 완료로 처리
+              }
+            }, 3000);
+          } else {
+            console.log('🚫 History already requested or loaded - skipping');
+          }
         } else {
           setIsAuthenticated(false);
           setAuthenticatedUser(null);
           setConnectionError('인증되지 않은 연결');
           console.warn('⚠️ 익명 연결: 로그인이 필요합니다');
+          setIsLoadingHistory(false);
         }
       });
 
-      // 채팅 히스토리 수신
-      newSocket.on('chat-history', (history) => {
-        console.log('📜 Chat history received:', history);
+      // 🔥 채팅 히스토리 수신
+      newSocket.on('chat-history', (data) => {
+        console.log('📜 Chat history received:', data);
         
-        // history가 배열인지 확인
-        if (!Array.isArray(history)) {
-          console.warn('⚠️ Chat history is not an array:', typeof history, history);
+        // 🔥 로딩 상태 즉시 해제 및 로딩 완료 표시
+        setIsLoadingHistory(false);
+        historyRequestedRef.current = false;
+        historyLoadedRef.current = true; // 🔥 히스토리 로딩 완료
+        
+        const historyMessages = data.messages || data || [];
+        
+        if (!Array.isArray(historyMessages)) {
+          console.warn('⚠️ Chat history messages is not an array:', typeof historyMessages, historyMessages);
+          console.log('🔄 Setting empty messages for first time chat');
           setMessages([]);
           return;
         }
         
-        const formattedMessages = history.flatMap((item: any, index: number) => {
-          // item이 유효한지 확인
-          if (!item || typeof item !== 'object') {
-            console.warn('⚠️ Invalid history item:', item);
-            return [];
-          }
-          
-          const messages = [];
-          
-          // 사용자 메시지
-          const userContent = item.content || item.userMessage || item.user || '';
-          if (userContent.trim()) {
-            messages.push({
-              id: `user-${index}`,
-              content: userContent,
-              isUser: true,
-              timestamp: item.timestamp || new Date().toISOString(),
-            });
-          }
-          
-          // AI 메시지
-          const aiContent = item.ai || item.aiResponse || item.assistant || '';
-          if (aiContent.trim()) {
-            messages.push({
-              id: `ai-${index}`,
-              content: aiContent,
-              isUser: false,
-              timestamp: item.timestamp || new Date().toISOString(),
-            });
-          }
-          
-          return messages;
-        });
+        // 🔥 빈 배열이어도 정상 처리
+        if (historyMessages.length === 0) {
+          console.log('📭 No previous chat history - starting fresh conversation');
+          setMessages([]);
+          return;
+        }
         
-        console.log('✅ Formatted messages:', formattedMessages.length);
-        setMessages(formattedMessages);
+        const formattedMessages: ChatMessage[] = historyMessages
+          .map((item: any, index: number) => {
+            if (!item || typeof item !== 'object') {
+              console.warn('⚠️ Invalid history item:', item);
+              return null;
+            }
+            
+            return {
+              id: `history-${item.timestamp || index}`,
+              content: item.content || '',
+              isUser: item.role === 'user',
+              timestamp: item.timestamp ? new Date(item.timestamp).toISOString() : new Date().toISOString(),
+            };
+          })
+          .filter((msg): msg is ChatMessage => msg !== null);
+        
+        console.log(`✅ Loaded ${formattedMessages.length} messages from chat history`);
+        
+        const sortedMessages = formattedMessages.sort((a, b) => 
+          new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+        );
+        
+        setMessages(sortedMessages);
+        
+        if (data.source) {
+          console.log(`📂 Memory source: ${data.source} (${data.memoryType || 'unknown'})`);
+        }
+      });
+
+      // 🔥 채팅 기록 클리어 확인
+      newSocket.on('chat-history-cleared', (data) => {
+        console.log('🗑️ Chat history cleared:', data);
+        if (data.success) {
+          setMessages([]);
+          // 🔥 클리어 후에는 다시 로딩 가능하도록 설정
+          historyLoadedRef.current = false;
+          historyRequestedRef.current = false;
+          console.log('✅ Local chat history cleared and ready for new conversation');
+        }
       });
 
       // 스트리밍 메시지 수신
@@ -142,11 +190,9 @@ export function useWebSocketChat({ userId, token }: UseWebSocketChatProps) {
         } else if (data.type === 'content') {
           messageBufferRef.current += data.data;
           
-          // 실시간으로 메시지 업데이트
           setMessages(prev => {
             const lastMessage = prev[prev.length - 1];
             if (lastMessage && !lastMessage.isUser) {
-              // 마지막 AI 메시지 업데이트
               return [
                 ...prev.slice(0, -1),
                 {
@@ -155,7 +201,6 @@ export function useWebSocketChat({ userId, token }: UseWebSocketChatProps) {
                 }
               ];
             } else {
-              // 새 AI 메시지 추가
               return [
                 ...prev,
                 {
@@ -186,23 +231,33 @@ export function useWebSocketChat({ userId, token }: UseWebSocketChatProps) {
         setIsTyping(false);
       });
 
-      // 에러 처리
+      // 🔥 에러 처리 개선
       newSocket.on('chat-error', (error) => {
         console.error('❌ Chat error:', error);
         setConnectionError(error.message);
         setIsTyping(false);
+        
+        // 🔥 에러가 발생해도 로딩 상태는 해제하고 빈 메시지로 설정
+        if (isLoadingHistory) {
+          console.log('🔧 Chat error occurred - setting empty messages for first time chat');
+          setIsLoadingHistory(false);
+          historyRequestedRef.current = false;
+          historyLoadedRef.current = true; // 🔥 에러에도 로딩 완료로 처리
+          setMessages([]);
+        }
       });
 
       // 연결 해제
       newSocket.on('disconnect', (reason) => {
         console.warn('🔌 WebSocket disconnected:', reason);
         setIsConnected(false);
-        setIsAuthenticated(false); // 연결 해제 시 인증 상태도 초기화
+        setIsAuthenticated(false);
         setAuthenticatedUser(null);
+        setIsLoadingHistory(false);
+        historyRequestedRef.current = false;
+        historyLoadedRef.current = false; // 🔥 다시 연결 시 히스토리 로딩 가능
         
-        // 자동 재연결 (일부 경우)
         if (reason === 'io server disconnect') {
-          // 서버에서 연결을 끊은 경우 수동 재연결 필요
           reconnectTimeoutRef.current = setTimeout(() => {
             console.log('🔄 Attempting to reconnect...');
             newSocket.connect();
@@ -215,6 +270,9 @@ export function useWebSocketChat({ userId, token }: UseWebSocketChatProps) {
         console.error('❌ Connection error:', error);
         setConnectionError(`Connection failed: ${error.message}`);
         setIsConnected(false);
+        setIsLoadingHistory(false);
+        historyRequestedRef.current = false;
+        historyLoadedRef.current = false; // 🔥 연결 에러 시 리셋
       });
 
       setSocket(newSocket);
@@ -222,8 +280,40 @@ export function useWebSocketChat({ userId, token }: UseWebSocketChatProps) {
     } catch (error) {
       console.error('❌ Socket creation error:', error);
       setConnectionError('Failed to create socket connection');
+      setIsLoadingHistory(false);
+      historyRequestedRef.current = false;
+      historyLoadedRef.current = false; // 🔥 생성 에러 시 리셋
     }
-  }, [token]);
+  }, [token, isLoadingHistory]);
+
+  // 🔥 수동으로 대화 기록 요청하는 함수 개선
+  const requestChatHistory = useCallback(() => {
+    if (!socket || !isConnected || !isAuthenticated) {
+      console.warn('Cannot request chat history: not ready');
+      return;
+    }
+    
+    if (historyRequestedRef.current || historyLoadedRef.current) {
+      console.log('📋 Chat history already requested or loaded');
+      return;
+    }
+    
+    console.log('📋 Manually requesting chat history...');
+    setIsLoadingHistory(true);
+    historyRequestedRef.current = true;
+    
+    socket.emit('join-personal-chat');
+    
+    setTimeout(() => {
+      if (isLoadingHistory && !historyLoadedRef.current) {
+        console.warn('⏰ Manual chat history loading timeout');
+        setIsLoadingHistory(false);
+        historyRequestedRef.current = false;
+        historyLoadedRef.current = true;
+        setMessages([]);
+      }
+    }, 3000);
+  }, [socket, isConnected, isAuthenticated, isLoadingHistory]);
 
   // 메시지 전송
   const sendMessage = useCallback((message: string) => {
@@ -234,7 +324,6 @@ export function useWebSocketChat({ userId, token }: UseWebSocketChatProps) {
 
     console.log('📤 Sending message:', message);
 
-    // 사용자 메시지 즉시 표시
     const userMessage: ChatMessage = {
       id: `user-${Date.now()}`,
       content: message,
@@ -243,8 +332,6 @@ export function useWebSocketChat({ userId, token }: UseWebSocketChatProps) {
     };
 
     setMessages(prev => [...prev, userMessage]);
-
-    // WebSocket으로 메시지 전송
     socket.emit('send-personal-message', { message });
   }, [socket, isConnected]);
 
@@ -252,8 +339,8 @@ export function useWebSocketChat({ userId, token }: UseWebSocketChatProps) {
   const clearHistory = useCallback(() => {
     if (!socket || !isConnected) return;
 
+    console.log('🗑️ Clearing chat history...');
     socket.emit('clear-chat-history');
-    setMessages([]);
   }, [socket, isConnected]);
 
   // 연결 해제
@@ -272,32 +359,48 @@ export function useWebSocketChat({ userId, token }: UseWebSocketChatProps) {
     setIsConnected(false);
     setIsTyping(false);
     setConnectionError(null);
+    setIsLoadingHistory(false);
+    historyRequestedRef.current = false;
+    historyLoadedRef.current = false; // 🔥 연결 해제 시 리셋
   }, [socket]);
+
+  // 🔥 인증 상태 변경 시 대화 기록 요청 (단순화)
+  useEffect(() => {
+    // 인증 성공 후 최초 1회만 실행
+    if (isAuthenticated && isConnected && !historyRequestedRef.current && !historyLoadedRef.current) {
+      console.log('🔄 Auth state changed - ready to request chat history');
+      // join-personal-chat은 connected 이벤트에서 이미 처리
+    }
+  }, [isAuthenticated, isConnected]); // messages.length 제거
 
   // 컴포넌트 마운트/언마운트 시 연결 관리
   useEffect(() => {
     if (userId && token) {
+      // 🔥 연결 시 상태 초기화
+      historyLoadedRef.current = false;
       connect();
     }
 
     return () => {
       disconnect();
     };
-  }, [userId, token]); // connect, disconnect 제거하여 무한 루프 방지
+  }, [userId, token]); // connect, disconnect 제거
 
   return {
     // 상태
     isConnected,
-    isAuthenticated, // 인증 상태 추가
-    authenticatedUser, // 인증된 사용자 정보 추가
+    isAuthenticated,
+    authenticatedUser,
     isTyping,
     messages,
     connectionError,
+    isLoadingHistory,
     
     // 액션
     sendMessage,
     clearHistory,
     disconnect,
     reconnect: connect,
+    requestChatHistory, // 🔥 수동 요청 함수 추가
   };
 }
