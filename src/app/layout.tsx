@@ -25,7 +25,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
-      <body className={inter.className} suppressHydrationWarning>
+      <body className={`${inter.className} bg-gradient-to-br from-orange-950 via-amber-950 to-red-950`} suppressHydrationWarning>
         <Providers>
           {children}
           {/* 강화된 디버그 패널 */}

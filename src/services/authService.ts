@@ -26,7 +26,7 @@ class AuthService {
     this.api.interceptors.request.use(
       (config) => {
         if (typeof window !== 'undefined') {
-          const token = localStorage.getItem('auth_token');
+          const token = localStorage.getItem('auth_token'); // 통일: auth_token 사용
           if (token) {
             config.headers.Authorization = `Bearer ${token}`;
           }
@@ -42,7 +42,7 @@ class AuthService {
       (error) => {
         if (error.response?.status === 401 && typeof window !== 'undefined') {
           // Unauthorized - clear local storage and redirect to home
-          localStorage.removeItem('auth_token');
+          localStorage.removeItem('auth_token'); // 통일: auth_token 사용
           window.location.href = '/';
         }
         return Promise.reject(error);
@@ -53,7 +53,7 @@ class AuthService {
   // Login
   async login(email: string, password: string): Promise<ApiResponse> {
     try {
-      const response = await this.api.post('/', {
+      const response = await this.api.post('/auth/login', {
         email,
         password,
       });
@@ -101,13 +101,22 @@ class AuthService {
         headers.Authorization = `Bearer ${token}`;
       }
       
-      const response = await this.api.get('/auth/profile', { headers });
+      console.log('🔍 getProfile API 호출:', { 
+        url: '/users/profile', 
+        hasToken: !!token,
+        hasAuthHeader: !!headers.Authorization 
+      });
+      
+      const response = await this.api.get('/users/profile', { headers });
+      
+      console.log('🔍 getProfile API 응답:', response.data);
       
       return {
         success: true,
         user: response.data.user || response.data,
       };
     } catch (error: any) {
+      console.error('🔍 getProfile API 에러:', error);
       return {
         success: false,
         error: error.response?.data?.message || error.message || '프로필 조회에 실패했습니다.',
@@ -118,7 +127,7 @@ class AuthService {
   // Update Profile
   async updateProfile(profileData: Partial<User>): Promise<ApiResponse> {
     try {
-      const response = await this.api.put('/auth/profile', profileData);
+      const response = await this.api.put('/users/profile', profileData);
       
       return {
         success: true,
@@ -156,7 +165,7 @@ class AuthService {
   // Logout (clear client-side data)
   logout() {
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('auth_token');
+      localStorage.removeItem('auth_token'); // 통일: auth_token 사용
     }
   }
 }

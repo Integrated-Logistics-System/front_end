@@ -44,7 +44,7 @@ export const authState = atom<AuthState>({
     user: null,
     token: null,
     isAuthenticated: false,
-    isLoading: false,
+    isLoading: true, // 초기 로딩 상태를 true로 설정
     error: null,
   },
 });

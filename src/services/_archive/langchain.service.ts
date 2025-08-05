@@ -20,25 +20,37 @@ export interface LangChainResponse {
 export const langchainService = {
   // LangChain 기반 스마트 검색 (긴 타임아웃)
   async searchWithLangchain(
-    message: string, 
-    userId?: string
+    query: string,
+    userAllergies?: string[],
+    maxResults?: number
   ): Promise<LangChainResponse> {
-    const response = await apiClient.postLongRunning(API_ENDPOINTS.LANGCHAIN.SEARCH, {
-      message,
-      userId
+    const response = await apiClient.postLongRunning('/langchain/search', {
+      query,
+      userAllergies,
+      maxResults
+    });
+    return response.data;
+  },
+
+  // 채팅 기반 대화
+  async processChat(
+    message: string
+  ): Promise<any> {
+    const response = await apiClient.postLongRunning('/langchain/chat', {
+      message
     });
     return response.data;
   },
 
   // 채팅 기록 조회
-  async getChatHistory(userId: string): Promise<ChatMessage[]> {
-    const response = await apiClient.get(`${API_ENDPOINTS.LANGCHAIN.CHAT_HISTORY}/${userId}`);
-    return response.data;
+  async getChatHistory(): Promise<ChatMessage[]> {
+    const response = await apiClient.get('/langchain/chat-history');
+    return response.data.messages || [];
   },
 
   // 채팅 기록 삭제
-  async clearChatHistory(userId: string): Promise<boolean> {
-    const response = await apiClient.delete(`${API_ENDPOINTS.LANGCHAIN.CHAT_HISTORY}/${userId}`);
+  async clearChatHistory(): Promise<boolean> {
+    const response = await apiClient.delete('/langchain/chat-history');
     return response.success;
   },
 

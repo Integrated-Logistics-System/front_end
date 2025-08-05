@@ -26,6 +26,17 @@ export function useAllergenTypes() {
   });
 }
 
+// 알레르기 목록 조회 (SearchFilters에서 사용)
+export function useAllergens() {
+  const { data: allergens, isLoading, error } = useAllergenTypes();
+  
+  return {
+    allergens: allergens || [],
+    isLoading,
+    error,
+  };
+}
+
 // 사용자 알레르기 프로필 관리 (기존 방식 - 프로필에서 가져오기)
 export function useUserAllergyProfile() {
   const { token, user } = useAuthViewModel();
@@ -37,7 +48,7 @@ export function useUserAllergyProfile() {
     queryFn: async () => {
       if (!token) return { allergies: [], severity: {} };
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/profile`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/profile`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -79,7 +90,7 @@ export function useUserAllergyProfile() {
       
       console.log('💾 Updating allergies:', allergies); // 디버깅용
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/allergies`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/allergies`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -138,7 +149,7 @@ export function useUserAllergies() {
         throw new Error('로그인이 필요합니다');
       }
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/allergies`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/allergies`, {
         headers: {
           'Authorization': `Bearer ${authToken}`,
         },
@@ -169,7 +180,7 @@ export function useUserAllergies() {
         throw new Error('로그인이 필요합니다');
       }
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/allergies`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/allergies`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

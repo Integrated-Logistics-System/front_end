@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { ChefHat, Menu, X, Search, MessageCircle, User, LogOut, Shield } from 'lucide-react';
+import { ChefHat, Menu, X, Search, MessageCircle, LogOut, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { AllergySettingsSidebar } from '@/components/ui/AllergySettingsSidebar';
@@ -34,7 +34,6 @@ export function Header() {
   const menuItems = [
     { href: '/search', label: 'Recipe Search', icon: Search },
     { href: '/chat', label: 'AI Chat', icon: MessageCircle },
-    { href: '/profile', label: 'My Profile', icon: User },
   ];
 
   const handleLogout = async () => {
@@ -124,10 +123,7 @@ export function Header() {
               {/* 인증 상태에 따른 버튼 */}
               {isAuthenticated ? (
                   <div className="hidden sm:flex items-center space-x-3">
-                    <Link href="/profile" className="flex items-center space-x-2 text-gray-600 hover:text-orange-600 transition-colors">
-                      <User className="h-4 w-4" />
-                      <span className="text-sm font-medium">{user?.name}</span>
-                    </Link>
+                    <span className="text-sm font-medium text-gray-600">{user?.name}</span>
                     <Button
                         variant="ghost"
                         size="sm"
@@ -223,12 +219,9 @@ export function Header() {
                   <div className="pt-3 border-t border-gray-200 dark:border-gray-700 space-y-2">
                     {isAuthenticated ? (
                         <>
-                          <Link href="/profile" onClick={handleCloseMenu}>
-                            <Button variant="ghost" size="sm" className="w-full flex items-center justify-center space-x-2">
-                              <User className="h-4 w-4" />
-                              <span>{user?.name} Profile</span>
-                            </Button>
-                          </Link>
+                          <div className="text-center text-sm font-medium text-gray-600 py-2">
+                            {user?.name}
+                          </div>
                           <Button
                               variant="ghost"
                               size="sm"

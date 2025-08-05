@@ -41,7 +41,7 @@ class RecipeService {
   // Search recipes
   async searchRecipes(query: string, filters?: any) {
     try {
-      const response = await this.api.post('/recipe/search', {
+      const response = await this.api.post('/recipes/search', {
         query,
         ...filters,
       });
@@ -54,7 +54,7 @@ class RecipeService {
   // Get recipe detail
   async getRecipeDetail(recipeId: string) {
     try {
-      const response = await this.api.get(`/recipe/detail/${recipeId}`);
+      const response = await this.api.get(`/recipes/${recipeId}`);
       return response.data;
     } catch (error: any) {
       throw new Error(error.response?.data?.message || '레시피 상세 조회 실패');
@@ -64,7 +64,7 @@ class RecipeService {
   // Get recipe steps (if separate endpoint exists)
   async getRecipeSteps(recipeId: string) {
     try {
-      const response = await this.api.get(`/recipe/steps/${recipeId}`);
+      const response = await this.api.get(`/recipes/${recipeId}/steps`);
       return response.data;
     } catch (error: any) {
       throw new Error(error.response?.data?.message || '레시피 단계 조회 실패');
@@ -74,7 +74,7 @@ class RecipeService {
   // Chat-based recipe search
   async chatSearch(message: string, userId?: string) {
     try {
-      const response = await this.api.post('/recipe/chat', {
+      const response = await this.api.post('/langgraph/chat', {
         message,
         userId,
       });
@@ -87,7 +87,7 @@ class RecipeService {
   // Smart search with LangChain
   async smartSearch(query: string, userId?: string) {
     try {
-      const response = await this.api.post('/langchain/search', {
+      const response = await this.api.post('/langgraph/recipe-search', {
         query,
         userId,
       });
@@ -100,7 +100,7 @@ class RecipeService {
   // Get chat history
   async getChatHistory(userId: string) {
     try {
-      const response = await this.api.get(`/langchain/chat-history/${userId}`);
+      const response = await this.api.get(`/langgraph/chat-history/${userId}`);
       return response.data;
     } catch (error: any) {
       throw new Error(error.response?.data?.message || '채팅 기록 조회 실패');
@@ -110,7 +110,7 @@ class RecipeService {
   // Clear chat history
   async clearChatHistory(userId: string) {
     try {
-      const response = await this.api.delete(`/langchain/chat-history/${userId}`);
+      const response = await this.api.delete(`/langgraph/chat-history/${userId}`);
       return response.data;
     } catch (error: any) {
       throw new Error(error.response?.data?.message || '채팅 기록 삭제 실패');

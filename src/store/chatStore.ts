@@ -30,5 +30,4 @@ export const chatState = atom<ChatState>({
 });
 
 // WebSocket Connection State
-// Removed wsConnectionState as it's no longer needed
-// WebSocket connection is now managed by useSocket hook
+// Connection state is now managed by useHybridChat hook

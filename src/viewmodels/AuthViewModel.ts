@@ -1,10 +1,87 @@
 import {SetterOrUpdater, useRecoilState, useRecoilValue} from 'recoil';
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import {AuthState, authState, User} from '@/store/authStore';
 import { authService } from '@/services/authService';
 
+// 전역 초기화 플래그
+let isInitialized = false;
+let initializationPromise: Promise<void> | null = null;
+
 export function useAuthViewModel() {
   const [auth, setAuth] = useRecoilState(authState);
+  const router = useRouter();
+  const hasInitialized = useRef(false);
+
+  // 초기 토큰 로드 및 인증 상태 복원 (전역적으로 한 번만)
+  useEffect(() => {
+    if (hasInitialized.current || isInitialized) return;
+    
+    if (initializationPromise) {
+      // 이미 초기화 중이면 기다림
+      return;
+    }
+
+    hasInitialized.current = true;
+    isInitialized = true;
+
+    initializationPromise = (async () => {
+      if (typeof window === 'undefined') return;
+      
+      const token = localStorage.getItem('auth_token');
+      console.log('🔍 AuthViewModel 초기화 (전역, 한 번만):', { token: token ? 'exists' : 'null' });
+      
+      if (!token) {
+        setAuth(prev => ({ ...prev, isLoading: false }));
+        return;
+      }
+
+      try {
+        setAuth(prev => ({ ...prev, isLoading: true }));
+        
+        // 토큰으로 사용자 프로필 가져오기
+        console.log('🔍 프로필 API 호출 중...');
+        const response = await authService.getProfile();
+        console.log('🔍 프로필 API 응답:', response);
+        
+        if (response.success && response.user) {
+          console.log('✅ 토큰으로 인증 상태 복원:', response.user.email);
+          setAuth({
+            user: response.user,
+            token: token,
+            isAuthenticated: true,
+            isLoading: false,
+            error: null,
+          });
+        } else {
+          // 토큰이 유효하지 않음
+          console.log('❌ 토큰 만료 - 삭제', response);
+          localStorage.removeItem('auth_token');
+          setAuth({
+            user: null,
+            token: null,
+            isAuthenticated: false,
+            isLoading: false,
+            error: null,
+          });
+        }
+      } catch (error) {
+        console.error('❌ 토큰 검증 실패:', error);
+        localStorage.removeItem('auth_token');
+        setAuth({
+          user: null,
+          token: null,
+          isAuthenticated: false,
+          isLoading: false,
+          error: null,
+        });
+      }
+    })();
+
+    initializationPromise.finally(() => {
+      initializationPromise = null;
+    });
+  }, []); // 빈 의존성 배열 - 앱 시작 시 한 번만 실행
 
   const login = useCallback(async (email: string, password: string) => {
     setAuth(prev => ({ ...prev, isLoading: true, error: null }));
@@ -31,6 +108,8 @@ export function useAuthViewModel() {
           console.log('💾 토큰 저장 완료');
         }
         
+        // 리다이렉트는 컴포넌트의 useEffect에서 처리
+        
         return { success: true };
       } else {
         setAuth(prev => ({
@@ -49,7 +128,7 @@ export function useAuthViewModel() {
       }));
       return { success: false, error: errorMessage };
     }
-  }, [setAuth]);
+  }, [setAuth, router]);
 
   const register = useCallback(async (email: string, password: string, name: string) => {
     setAuth(prev => ({ ...prev, isLoading: true, error: null }));
@@ -71,6 +150,8 @@ export function useAuthViewModel() {
           localStorage.setItem('auth_token', response.token);
         }
         
+        // 리다이렉트는 컴포넌트의 useEffect에서 처리
+        
         return { success: true };
       } else {
         setAuth(prev => ({
@@ -89,7 +170,7 @@ export function useAuthViewModel() {
       }));
       return { success: false, error: errorMessage };
     }
-  }, [setAuth]);
+  }, [setAuth, router]);
 
   const logout = useCallback(() => {
     setAuth({
@@ -100,11 +181,14 @@ export function useAuthViewModel() {
       error: null,
     });
     
-    // Remove token from localStorage
+    // 모든 토큰 제거
     if (typeof window !== 'undefined') {
       localStorage.removeItem('auth_token');
     }
-  }, [setAuth]);
+    
+    // 홈페이지로 리다이렉트
+    router.push('/');
+  }, [setAuth, router]);
 
   const clearError = useCallback(() => {
     setAuth(prev => ({ ...prev, error: null }));
@@ -143,69 +227,7 @@ export function useAuthViewModel() {
     }
   }, [setAuth]);
 
-  const initializeAuth = useCallback(async () => {
-    if (typeof window === 'undefined') return;
-    
-    // 이미 인증되었다면 실행하지 않음
-    if (auth.isAuthenticated && auth.user) {
-      console.log('✅ 이미 인증된 상태 - 스킵');
-      return;
-    }
-    
-    const token = localStorage.getItem('auth_token');
-    console.log('🔍 AuthViewModel initializeAuth:', { token, isAuthenticated: auth.isAuthenticated });
-    
-    if (!token) {
-      console.log('🚨 토큰이 없음 - 로그아웃 상태로 설정');
-      setAuth({
-        user: null,
-        token: null,
-        isAuthenticated: false,
-        isLoading: false,
-        error: null,
-      });
-      return;
-    }
-
-    setAuth(prev => ({ ...prev, isLoading: true }));
-    
-    try {
-      console.log('🔍 토큰으로 프로필 조회 시도...');
-      const response = await authService.getProfile(token);
-      
-      if (response.success) {
-        console.log('✅ 프로필 조회 성공:', response.user);
-        setAuth({
-          user: response.user || null,
-          token,
-          isAuthenticated: true,
-          isLoading: false,
-          error: null,
-        });
-      } else {
-        console.log('❌ 토큰 만료 - 삭제');
-        // Invalid token, remove it
-        localStorage.removeItem('auth_token');
-        setAuth({
-          user: null,
-          token: null,
-          isAuthenticated: false,
-          isLoading: false,
-          error: null,
-        });
-      }
-    } catch (error) {
-      console.log('❌ 프로필 조회 에러:', error);
-      localStorage.removeItem('auth_token');
-      setAuth({
-        user: null,
-        token: null,
-        isAuthenticated: false,
-        isLoading: false,
-        error: null,
-      });
-    }
-  }, [setAuth, auth.isAuthenticated, auth.user]);
+  // initializeAuth 함수 제거됨 - useEffect에서 자동 처리
 
   return {
     // State
@@ -221,7 +243,6 @@ export function useAuthViewModel() {
     logout,
     clearError,
     updateProfile,
-    initializeAuth,
     setAuth: setAuth as SetterOrUpdater<AuthState>, // 타입 명시
   };
 }

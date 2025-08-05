@@ -26,7 +26,7 @@ export function useUserProfile() {
 
             if (!authToken) return [];
 
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/allergies`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/allergies`, {
                 headers: { 'Authorization': `Bearer ${authToken}` },
             });
 
@@ -53,7 +53,7 @@ export function useUserProfile() {
 
             if (!authToken) return null;
 
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/profile`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/profile`, {
                 headers: { 'Authorization': `Bearer ${authToken}` },
             });
 
@@ -77,7 +77,7 @@ export function useUserProfile() {
 
             if (!authToken) throw new Error('로그인이 필요합니다');
 
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/allergies`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/allergies`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -123,7 +123,7 @@ export function useUserProfile() {
 
             if (!authToken) throw new Error('로그인이 필요합니다');
 
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/cooking-preferences`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/cooking-preferences`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -173,7 +173,7 @@ export function useUserProfile() {
 
             if (!authToken) throw new Error('로그인이 필요합니다');
 
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/cooking-preferences`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/cooking-preferences`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

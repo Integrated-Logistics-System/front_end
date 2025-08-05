@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '../hooks/useAuth';
 import { useRouter } from 'next/navigation';
+import { useAuthViewModel } from '@/viewmodels/AuthViewModel';
 import { Eye, EyeOff, ChefHat, UtensilsCrossed, Clock, Users, Sparkles, Heart, Shield, Zap, Play } from 'lucide-react';
 
 export default function Home() {
@@ -11,23 +11,22 @@ export default function Home() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [demoLoading, setDemoLoading] = useState(false);
-  const [error, setError] = useState('');
 
-  const { user, login, register } = useAuth();
   const router = useRouter();
+  const { user, isAuthenticated, isLoading, error, login, register, clearError } = useAuthViewModel();
 
   useEffect(() => {
-    if (user) {
+    if (isAuthenticated && user && !isLoading) {
+      // 로그인 성공 시 채팅 페이지로 리다이렉트
+      console.log('🔄 리다이렉트 to /chat:', { isAuthenticated, user: user.email, isLoading });
       router.push('/chat');
     }
-  }, [user, router]);
+  }, [isAuthenticated, user, isLoading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError('');
+    clearError();
 
     try {
       if (isLogin) {
@@ -36,20 +35,18 @@ export default function Home() {
         await register(email, password, name);
       }
     } catch (error: any) {
-      setError(error.message || 'An error occurred');
-    } finally {
-      setLoading(false);
+      // 에러는 AuthViewModel에서 처리
     }
   };
 
   const handleDemoLogin = async () => {
     setDemoLoading(true);
-    setError('');
+    clearError();
 
     try {
-      await login('demo@example.com', 'demo123');
+      await login('chef01@test.com', 'chef01');
     } catch (error: any) {
-      setError(error.message || '체험용 계정 로그인에 실패했습니다.');
+      // 에러는 AuthViewModel에서 처리
     } finally {
       setDemoLoading(false);
     }
@@ -57,7 +54,7 @@ export default function Home() {
 
   const toggleMode = () => {
     setIsLogin(!isLogin);
-    setError('');
+    clearError();
     setEmail('');
     setPassword('');
     setName('');
@@ -187,7 +184,7 @@ export default function Home() {
 
                 <button
                     onClick={handleDemoLogin}
-                    disabled={demoLoading || loading}
+                    disabled={demoLoading || isLoading}
                     className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-gray-800 shadow-md hover:shadow-lg hover:shadow-amber-500/25 mb-3"
                 >
                   {demoLoading ? (
@@ -288,10 +285,10 @@ export default function Home() {
 
                 <button
                     type="submit"
-                    disabled={loading || demoLoading}
+                    disabled={isLoading || demoLoading}
                     className="w-full bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-4 px-6 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-800 shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40"
                 >
-                  {loading ? (
+                  {isLoading ? (
                       <div className="flex items-center justify-center gap-3">
                         <UtensilsCrossed className="h-5 w-5 animate-spin" />
                         {isLogin ? '요리 준비 중...' : '셰프 등록 중...'}

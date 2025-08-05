@@ -20,19 +20,33 @@ export const ROUTES = {
 
 export const API_ENDPOINTS = {
   AUTH: {
-    LOGIN: '/',
+    LOGIN: '/auth/login',
     REGISTER: '/auth/register',
-    PROFILE: '/auth/profile',
+    PROFILE: '/users/profile',
+  },
+  USER: {
+    ALLERGIES: '/users/allergies',
+    PROFILE: '/users/profile',
+    COOKING_PREFERENCES: '/users/cooking-preferences',
   },
   RECIPE: {
-    SEARCH: '/recipe/search',
-    DETAIL: '/recipe/detail',
-    CHAT: '/recipe/chat',
+    SEARCH: '/recipes/search',
+    DETAIL: '/recipes',
   },
-  LANGCHAIN: {
-    SEARCH: '/langchain/search',
-    CHAT_HISTORY: '/langchain/chat-history',
+  // 새로운 간단한 Chat API (LangChain + RAG + Agent)
+  CHAT: {
+    SEND: '/chat',
+    SEARCH: '/chat/search',
+    STATUS: '/chat/status',
+    SUGGESTIONS: '/chat/suggestions',
+    KEYWORDS: '/chat/keywords',
   },
+  // 기존 대화 히스토리는 유지
+  CONVERSATION: {
+    HISTORY: '/conversation/history',
+  },
+  // 아카이브된 복잡한 엔드포인트들 (더 이상 사용하지 않음)
+  // LANGCHAIN: { ... },
   ALLERGEN: {
     CHECK: '/allergen/check',
     TYPES: '/allergen/types',

@@ -23,7 +23,7 @@ class ApiClient {
     this.client.interceptors.request.use(
       (config) => {
         // localStorage에서 토큰 가져오기 (우선순위)
-        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
@@ -43,7 +43,7 @@ class ApiClient {
         if (error.response?.status === 401) {
           // localStorage에서 토큰 제거
           if (typeof window !== 'undefined') {
-            localStorage.removeItem('token');
+            localStorage.removeItem('auth_token');
             localStorage.removeItem('user');
           }
           toast.error('로그인이 필요합니다.');
@@ -60,6 +60,7 @@ class ApiClient {
 
   async get<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
     const response = await this.client.get(url, config);
+    console.log('📚 apiClient.get: full response object:', response);
     return response.data;
   }
 

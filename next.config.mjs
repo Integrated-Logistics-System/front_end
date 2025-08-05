@@ -38,11 +38,11 @@ const nextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: 'http://192.168.0.111:8081/api/:path*',
+        destination: 'http://localhost:8081/api/:path*',
       },
       {
         source: '/ws/:path*',
-        destination: 'http://192.168.0.111:8083/:path*',
+        destination: 'http://localhost:8083/:path*',
       },
     ];
   },
@@ -68,9 +68,24 @@ const nextConfig = {
       };
     }
 
-    // 개발 환경에서 소스맵 최적화
+    // 개발 환경에서 소스맵 최적화 및 청크 로딩 개선
     if (dev) {
       config.devtool = 'eval-source-map';
+      config.optimization.splitChunks = {
+        chunks: 'all',
+        cacheGroups: {
+          default: {
+            minChunks: 2,
+            priority: -20,
+            reuseExistingChunk: true,
+          },
+          vendor: {
+            test: /[\\/]node_modules[\\/]/,
+            priority: -10,
+            reuseExistingChunk: true,
+          },
+        },
+      };
     }
 
     return config;
@@ -79,6 +94,19 @@ const nextConfig = {
   // 🚀 성능 최적화
   poweredByHeader: false,
   compress: true,
+  
+  // 🔧 개발 서버 설정
+  devIndicators: {
+    buildActivity: true,
+    buildActivityPosition: 'bottom-right',
+  },
+  
+  // 🔄 청크 로딩 최적화
+  onDemandEntries: {
+    // 개발 환경에서 청크 로딩 타임아웃 증가
+    maxInactiveAge: 60 * 1000, // 1분
+    pagesBufferLength: 5,
+  },
   
   // 📊 번들 분석 (개발 시)
   ...(process.env.ANALYZE === 'true' && {
