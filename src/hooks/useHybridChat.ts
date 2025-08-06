@@ -98,7 +98,12 @@ export function useHybridChat({ userId, token }: UseHybridChatProps) {
     try {
       console.log('🔗 Connecting to WebSocket...');
       
-      const newSocket = io(process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:8083', {
+      // WebSocket URL 및 옵션 결정
+      const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:8083';
+      
+      console.log('🔗 WebSocket URL:', wsUrl);
+      
+      let socketOptions: any = {
         auth: { token: authToken },
         transports: ['websocket', 'polling'],
         timeout: 60000,
@@ -106,7 +111,17 @@ export function useHybridChat({ userId, token }: UseHybridChatProps) {
         reconnectionAttempts: 10,
         reconnectionDelay: 2000,
         reconnectionDelayMax: 10000,
-      });
+      };
+      
+      // 프로덕션 환경 (Nginx 프록시 사용)에서는 상대 경로와 특별한 path 설정
+      if (wsUrl.startsWith('/ws')) {
+        socketOptions.path = '/socket.io/';
+        // 현재 도메인 사용 (브라우저 기본값)
+        var newSocket = io(socketOptions);
+      } else {
+        // 개발 환경에서는 직접 연결
+        var newSocket = io(wsUrl, socketOptions);
+      }
 
       // 연결 성공
       newSocket.on('connect', () => {
