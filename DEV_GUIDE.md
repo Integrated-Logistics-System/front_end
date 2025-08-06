@@ -25,16 +25,23 @@ cp .env.example .env.local
 
 ### 로컬 개발 (백엔드 직접 연결)
 ```bash
-# 1. 환경 파일 설정
-cp .env.dev .env.local
-
-# 2. 의존성 설치
+# 1. 의존성 설치
 npm install
 
-# 3. 개발 서버 시작
+# 2. 개발 서버 시작 (자동으로 .env.dev 사용)
 npm run dev
 
 # 접속: http://localhost:3000
+```
+
+**참고:** `npm run dev` 명령어는 자동으로 `.env.dev`를 `.env.local`로 복사한 후 개발 서버를 시작합니다.
+
+### 프로덕션 환경으로 개발 테스트
+```bash
+# 프로덕션 환경변수로 개발 서버 테스트
+npm run dev:prod
+
+# 접속: http://localhost:3000 (nginx 프록시 환경 시뮬레이션)
 ```
 
 ### Docker 환경 테스트
@@ -98,6 +105,12 @@ lsof -i :8083  # 백엔드 WebSocket
 ## 유용한 명령어
 
 ```bash
+# 개발 서버 (자동으로 .env.dev 사용)
+npm run dev
+
+# 개발 서버 (프로덕션 환경변수로 테스트)
+npm run dev:prod
+
 # 타입 체크
 npm run type-check
 
@@ -113,3 +126,11 @@ npm run clean
 # 번들 분석
 npm run analyze
 ```
+
+## npm 스크립트 설명
+
+| 명령어 | 환경파일 | 용도 |
+|--------|----------|------|
+| `npm run dev` | `.env.dev` | 로컬 백엔드 직접 연결 개발 |
+| `npm run dev:prod` | `.env.example` | nginx 프록시 환경 시뮬레이션 |
+| `docker-compose up` | `.env.local` | Docker 프로덕션 환경 테스트 |

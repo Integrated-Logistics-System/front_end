@@ -4,7 +4,8 @@
   "description": "AI Recipe Assistant Frontend - RAG + LangChain",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3000",
+    "dev": "cp .env.dev .env.local && next dev -p 3000",
+    "dev:prod": "cp .env.example .env.local && next dev -p 3000",
     "build": "next build",
     "start": "next start -p 80",
     "lint": "next lint",
