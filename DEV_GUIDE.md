@@ -12,6 +12,9 @@ echo "NEXT_PUBLIC_API_URL=http://localhost:8081/api" > .env.local
 echo "NEXT_PUBLIC_WS_URL=http://localhost:8083" >> .env.local
 ```
 
+**중요:** `next.config.mjs`에서 기본값이 `/api`, `/ws`(상대 경로)로 설정되어 있습니다.  
+개발 환경에서는 `.env.dev`의 절대 경로(`http://localhost:8081/api`, `http://localhost:8083`)가 이를 오버라이드합니다.
+
 ### 🚀 프로덕션 환경 (Docker)
 ```bash
 # .env.example을 .env.local로 복사
