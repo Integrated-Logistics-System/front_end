@@ -7,7 +7,7 @@ services:
     image: nginx:1.25-alpine
     container_name: recipe-ai-nginx-local
     ports:
-      - "80:80"      # HTTP
+      - "81:80"      # HTTP (80번은 DSM이 사용 중)
     volumes:
       # Nginx 설정 파일 (로컬용)
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro

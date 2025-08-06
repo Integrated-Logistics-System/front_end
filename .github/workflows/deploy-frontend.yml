@@ -108,16 +108,16 @@ jobs:
 
           echo "Testing frontend endpoint:"
           # Nginx 프록시를 통한 프론트엔드 접근 테스트
-          timeout 60 bash -c 'until wget --spider --quiet http://localhost:80; do echo "Waiting for frontend..."; sleep 5; done' || (echo "\n--- Frontend check failed. Displaying container logs: ---" && docker compose -f docker-compose.local.yml logs && exit 1)
+          timeout 60 bash -c 'until wget --spider --quiet http://localhost:81; do echo "Waiting for frontend..."; sleep 5; done' || (echo "\n--- Frontend check failed. Displaying container logs: ---" && docker compose -f docker-compose.local.yml logs && exit 1)
 
           echo "Testing backend API through frontend proxy:"
           # 프론트엔드를 통한 백엔드 API 프록시 테스트 (로컬호스트)
-          timeout 30 bash -c 'until wget --spider --quiet http://localhost:80/api/auth/health; do echo "Waiting for API proxy..."; sleep 3; done' || echo "API proxy test failed (non-critical - check if backend is running locally)"
+          timeout 30 bash -c 'until wget --spider --quiet http://localhost:81/api/auth/health; do echo "Waiting for API proxy..."; sleep 3; done' || echo "API proxy test failed (non-critical - check if backend is running locally)"
 
           echo "✅ Frontend deployment successful!"
-          echo "🌐 Frontend URL: http://localhost"
-          echo "📡 API Proxy: http://localhost/api (→ localhost:8081/api)"
-          echo "🔌 WebSocket Proxy: ws://localhost/ws (→ localhost:8083)"
+          echo "🌐 Frontend URL: http://localhost:81"
+          echo "📡 API Proxy: http://localhost:81/api (→ localhost:8081/api)"
+          echo "🔌 WebSocket Proxy: ws://localhost:81/ws (→ localhost:8083)"
 
       # 4. 배포 성공 알림
       - name: Deployment notification
@@ -127,6 +127,6 @@ jobs:
           docker compose -f docker-compose.local.yml ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}"
           echo ""
           echo "🔗 Service URLs:"
-          echo "  Frontend: http://localhost"
-          echo "  API Proxy: http://localhost/api → localhost:8081/api"
-          echo "  WebSocket: ws://localhost/ws → localhost:8083"
+          echo "  Frontend: http://localhost:81"
+          echo "  API Proxy: http://localhost:81/api → localhost:8081/api"
+          echo "  WebSocket: ws://localhost:81/ws → localhost:8083"
