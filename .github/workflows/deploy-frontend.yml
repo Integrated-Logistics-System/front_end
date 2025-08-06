@@ -1,0 +1,111 @@
+name: Build and Deploy Frontend to Synology
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  # CI 작업: 코드 품질 검증
+  quality-checks:
+    runs-on: self-hosted
+    
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run TypeScript type check
+        run: npm run type-check
+        
+      - name: Run ESLint
+        run: npm run lint
+        
+      - name: Build project
+        run: npm run build
+
+  # CD 작업: 메인 브랜치에만 배포
+  build-and-deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: quality-checks
+    runs-on: self-hosted
+
+    steps:
+      # 1. 소스코드 체크아웃
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      # 2. 기존 컨테이너 정리 및 Docker Compose로 프론트엔드 배포
+      - name: Clean up and deploy frontend
+        run: |
+          # GitHub Secret(ENV_FILE_FRONTEND)의 내용을 .env.local 파일로 생성
+          echo "${{ secrets.ENV_FILE_FRONTEND }}" > ./.env.local
+
+          # 필요한 디렉터리 생성
+          mkdir -p ./nginx/logs
+          mkdir -p ./nginx/static
+
+          # 이미지 버전 설정 (Git 커밋 해시 사용)
+          export IMAGE_TAG=${GITHUB_SHA:0:7}
+          echo "Building frontend with image tag: $IMAGE_TAG"
+
+          # 기존 프론트엔드 컨테이너 정리 (에러 무시)
+          docker stop recipe-ai-nginx recipe-ai-frontend wait-for-backend 2>/dev/null || true
+          docker rm recipe-ai-nginx recipe-ai-frontend wait-for-backend 2>/dev/null || true
+
+          # 기존 프론트엔드 이미지가 있는지 확인하고, 없으면 빌드
+          if ! docker image inspect recipe-ai-frontend:$IMAGE_TAG >/dev/null 2>&1; then
+            echo "Building new frontend image: recipe-ai-frontend:$IMAGE_TAG"
+            docker compose build --build-arg IMAGE_TAG=$IMAGE_TAG
+            docker tag recipe-ai-frontend:latest recipe-ai-frontend:$IMAGE_TAG
+          else
+            echo "Using existing frontend image: recipe-ai-frontend:$IMAGE_TAG"
+            docker tag recipe-ai-frontend:$IMAGE_TAG recipe-ai-frontend:latest
+          fi
+
+          # Docker Compose로 프론트엔드 서비스 시작
+          docker compose down --remove-orphans
+          docker compose up -d
+
+          # 오래된 프론트엔드 이미지 정리 (최근 5개 버전만 유지)
+          docker images recipe-ai-frontend --format "table {{.Tag}}\t{{.CreatedAt}}" | tail -n +2 | sort -k2 -r | tail -n +6 | awk '{print $1}' | grep -v latest | xargs -r -I {} docker rmi recipe-ai-frontend:{} 2>/dev/null || true
+
+      # 3. 백엔드 서비스 연결 대기 및 프론트엔드 서비스 확인
+      - name: Verify frontend is running
+        run: |
+          echo "Waiting for backend services to be ready..."
+          sleep 30 # 백엔드 대기 시간
+
+          echo "Checking running containers:"
+          docker compose ps
+
+          echo "Testing frontend endpoint:"
+          # Nginx 프록시를 통한 프론트엔드 접근 테스트
+          timeout 60 bash -c 'until wget --spider --quiet http://localhost:81; do echo "Waiting for frontend..."; sleep 5; done' || (echo "\n--- Frontend check failed. Displaying container logs: ---" && docker compose logs && exit 1)
+
+          echo "Testing backend API through frontend proxy:"
+          # 프론트엔드를 통한 백엔드 API 프록시 테스트
+          timeout 30 bash -c 'until wget --spider --quiet http://localhost:81/api/auth/health; do echo "Waiting for API proxy..."; sleep 3; done' || echo "API proxy test failed (non-critical)"
+
+          echo "✅ Frontend deployment successful!"
+          echo "🌐 Frontend URL: http://[나스IP]:81"
+          echo "📡 API Proxy: http://[나스IP]:81/api"
+
+      # 4. 배포 성공 알림 (선택사항)
+      - name: Deployment notification
+        run: |
+          echo "🎉 Frontend deployment completed successfully!"
+          echo "📊 Container Status:"
+          docker compose ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}"
