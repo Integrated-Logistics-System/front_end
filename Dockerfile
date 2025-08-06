@@ -28,6 +28,8 @@ WORKDIR /app
 # Next.js 실행에 필요한 파일들만 복사
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# public 디렉터리 복사 (정적 자산)
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
 # 포트 노출
