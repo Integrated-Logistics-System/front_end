@@ -8,7 +8,8 @@ export const RECIPE_DATABASE: Record<string, RecipeDetail> = {
     description: '신선한 허브와 올리브 오일로 마리네이드한 부드럽고 향긋한 치킨 케밥입니다. 건강하고 맛있는 지중해식 요리의 대표작입니다.',
     cookingTime: '45분 (마리네이드 30분 포함)',
     difficulty: '쉬움',
-    servings: '4인분',
+    servings: 4,
+    servingsText: '4인분',
     rating: 4.8,
     ingredients: [
       '닭가슴살 600g (한입 크기로 잘라서)',
@@ -77,7 +78,8 @@ export const RECIPE_DATABASE: Record<string, RecipeDetail> = {
     description: '매콤하고 진한 토마토 소스가 일품인 이탈리아 클래식 파스타입니다. 간단하지만 풍미가 깊어 누구나 좋아하는 요리입니다.',
     cookingTime: '25분',
     difficulty: '쉬움',
-    servings: '2인분',
+    servings: 2,
+    servingsText: '2인분',
     rating: 4.6,
     ingredients: [
       '스파게티 200g',
@@ -143,7 +145,8 @@ export const RECIPE_DATABASE: Record<string, RecipeDetail> = {
     description: '부드럽고 촉촉한 연어에 신선한 허브 향이 어우러진 고급 요리입니다. 특별한 날이나 손님 접대용으로 완벽합니다.',
     cookingTime: '20분',
     difficulty: '보통',
-    servings: '2인분',
+    servings: 2,
+    servingsText: '2인분',
     rating: 4.9,
     ingredients: [
       '연어 필레 2조각 (각 150g)',
