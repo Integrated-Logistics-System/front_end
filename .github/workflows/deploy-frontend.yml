@@ -36,9 +36,8 @@ jobs:
       - name: Build project
         run: npm run build
 
-  # CD 작업: 메인 브랜치에만 배포
+  # CD 작업: 배포
   build-and-deploy:
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     needs: quality-checks
     runs-on: self-hosted
 
