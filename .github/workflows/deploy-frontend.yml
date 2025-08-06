@@ -61,51 +61,66 @@ jobs:
           export IMAGE_TAG=${GITHUB_SHA:0:7}
           echo "Building frontend with image tag: $IMAGE_TAG"
 
+          # 로컬호스트 백엔드 사용을 위한 로컬 구성 사용
+          echo "Using localhost backend configuration..."
+
           # 기존 프론트엔드 컨테이너 정리 (에러 무시)
-          docker stop recipe-ai-nginx recipe-ai-frontend wait-for-backend 2>/dev/null || true
-          docker rm recipe-ai-nginx recipe-ai-frontend wait-for-backend 2>/dev/null || true
+          docker stop recipe-ai-nginx-local recipe-ai-frontend-local 2>/dev/null || true
+          docker rm recipe-ai-nginx-local recipe-ai-frontend-local 2>/dev/null || true
 
-          # 기존 프론트엔드 이미지가 있는지 확인하고, 없으면 빌드
-          if ! docker image inspect recipe-ai-frontend:$IMAGE_TAG >/dev/null 2>&1; then
-            echo "Building new frontend image: recipe-ai-frontend:$IMAGE_TAG"
-            docker compose build --build-arg IMAGE_TAG=$IMAGE_TAG
-            docker tag recipe-ai-frontend:latest recipe-ai-frontend:$IMAGE_TAG
-          else
-            echo "Using existing frontend image: recipe-ai-frontend:$IMAGE_TAG"
-            docker tag recipe-ai-frontend:$IMAGE_TAG recipe-ai-frontend:latest
-          fi
-
-          # Docker Compose로 프론트엔드 서비스 시작
-          docker compose down --remove-orphans
-          docker compose up -d
+          # Docker Compose로 프론트엔드 서비스 시작 (로컬 구성)
+          docker compose -f docker-compose.local.yml down --remove-orphans
+          docker compose -f docker-compose.local.yml build --build-arg IMAGE_TAG=$IMAGE_TAG
+          docker compose -f docker-compose.local.yml up -d
 
           # 오래된 프론트엔드 이미지 정리 (최근 5개 버전만 유지)
           docker images recipe-ai-frontend --format "table {{.Tag}}\t{{.CreatedAt}}" | tail -n +2 | sort -k2 -r | tail -n +6 | awk '{print $1}' | grep -v latest | xargs -r -I {} docker rmi recipe-ai-frontend:{} 2>/dev/null || true
 
-      # 3. 백엔드 서비스 연결 대기 및 프론트엔드 서비스 확인
+      # 3. 로컬 백엔드 연결 확인 및 프론트엔드 서비스 검증
       - name: Verify frontend is running
         run: |
-          echo "Waiting for backend services to be ready..."
-          sleep 30 # 백엔드 대기 시간
+          echo "Checking localhost backend services..."
+          # 로컬 백엔드 API 확인
+          if nc -z localhost 8081; then
+            echo "✅ Backend API (localhost:8081) is running"
+          else
+            echo "⚠️ Backend API (localhost:8081) is not running"
+          fi
+          
+          # 로컬 WebSocket 확인  
+          if nc -z localhost 8083; then
+            echo "✅ WebSocket (localhost:8083) is running"
+          else
+            echo "⚠️ WebSocket (localhost:8083) is not running"
+          fi
+
+          echo "Waiting for frontend services to be ready..."
+          sleep 20
 
           echo "Checking running containers:"
-          docker compose ps
+          docker compose -f docker-compose.local.yml ps
 
           echo "Testing frontend endpoint:"
           # Nginx 프록시를 통한 프론트엔드 접근 테스트
-          timeout 60 bash -c 'until wget --spider --quiet http://localhost:81; do echo "Waiting for frontend..."; sleep 5; done' || (echo "\n--- Frontend check failed. Displaying container logs: ---" && docker compose logs && exit 1)
+          timeout 60 bash -c 'until wget --spider --quiet http://localhost:80; do echo "Waiting for frontend..."; sleep 5; done' || (echo "\n--- Frontend check failed. Displaying container logs: ---" && docker compose -f docker-compose.local.yml logs && exit 1)
 
           echo "Testing backend API through frontend proxy:"
-          # 프론트엔드를 통한 백엔드 API 프록시 테스트
-          timeout 30 bash -c 'until wget --spider --quiet http://localhost:81/api/auth/health; do echo "Waiting for API proxy..."; sleep 3; done' || echo "API proxy test failed (non-critical)"
+          # 프론트엔드를 통한 백엔드 API 프록시 테스트 (로컬호스트)
+          timeout 30 bash -c 'until wget --spider --quiet http://localhost:80/api/auth/health; do echo "Waiting for API proxy..."; sleep 3; done' || echo "API proxy test failed (non-critical - check if backend is running locally)"
 
           echo "✅ Frontend deployment successful!"
-          echo "🌐 Frontend URL: http://[나스IP]:81"
-          echo "📡 API Proxy: http://[나스IP]:81/api"
+          echo "🌐 Frontend URL: http://localhost"
+          echo "📡 API Proxy: http://localhost/api (→ localhost:8081/api)"
+          echo "🔌 WebSocket Proxy: ws://localhost/ws (→ localhost:8083)"
 
-      # 4. 배포 성공 알림 (선택사항)
+      # 4. 배포 성공 알림
       - name: Deployment notification
         run: |
-          echo "🎉 Frontend deployment completed successfully!"
+          echo "🎉 Localhost Frontend deployment completed successfully!"
           echo "📊 Container Status:"
-          docker compose ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}"
+          docker compose -f docker-compose.local.yml ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}"
+          echo ""
+          echo "🔗 Service URLs:"
+          echo "  Frontend: http://localhost"
+          echo "  API Proxy: http://localhost/api → localhost:8081/api"
+          echo "  WebSocket: ws://localhost/ws → localhost:8083"

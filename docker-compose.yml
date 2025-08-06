@@ -84,14 +84,14 @@ services:
         echo '⏳ 백엔드 서비스 연결 대기 중...'
         
         # Backend API 대기
-        until nc -z 192.168.0.111 8081; do
+        until nc -z host.docker.internal 8081; do
           echo '🔗 Backend API 연결 대기...'
           sleep 3
         done
         echo '✅ Backend API 연결 확인'
         
         # WebSocket 대기
-        until nc -z 192.168.0.111 8083; do
+        until nc -z host.docker.internal 8083; do
           echo '🔌 WebSocket 연결 대기...'
           sleep 3
         done
