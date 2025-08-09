@@ -210,18 +210,18 @@ export function RecipeDetailCard({ recipe, onBookmark, onShare }: RecipeDetailCa
               >
                 {/* 단계 번호 */}
                 <div className="absolute -left-4 top-0 w-8 h-8 bg-gradient-to-r from-orange-600 to-amber-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                  {step.step}
+                  {String(step.step)}
                 </div>
                 
                 <div className="ml-4">
                   <div className="flex items-start justify-between mb-2">
                     <p className="text-orange-100 text-sm leading-relaxed flex-1">
-                      {step.instruction}
+                      {String(step.instruction)}
                     </p>
                     {step.time && (
                       <div className="flex items-center gap-1 ml-4 px-2 py-1 bg-amber-700/30 rounded-lg">
                         <Timer className="h-3 w-3 text-amber-400" />
-                        <span className="text-xs text-amber-300">{step.time}</span>
+                        <span className="text-xs text-amber-300">{String(step.time)}</span>
                       </div>
                     )}
                   </div>
@@ -229,7 +229,7 @@ export function RecipeDetailCard({ recipe, onBookmark, onShare }: RecipeDetailCa
                   {step.tip && (
                     <div className="flex items-start gap-2 mt-2 p-3 bg-blue-900/20 rounded-lg border border-blue-600/20">
                       <Lightbulb className="h-4 w-4 text-blue-400 flex-shrink-0 mt-0.5" />
-                      <p className="text-blue-200 text-xs leading-relaxed">{step.tip}</p>
+                      <p className="text-blue-200 text-xs leading-relaxed">{String(step.tip)}</p>
                     </div>
                   )}
                 </div>

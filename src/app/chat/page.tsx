@@ -694,11 +694,9 @@ export default function WebSocketChatPage() {
                             {(() => {
                               // 1. 새로운 백엔드에서 detailedRecipe가 왔을 때 우선 처리
                               if (message.metadata?.conversationType === 'recipe_detail' && 
-                                  message.metadata?.recipeData && 
-                                  message.metadata.recipeData.length > 0 && 
-                                  message.metadata.recipeData[0].ingredients) {
+                                  message.metadata?.recipeDetail) {
                                 
-                                const detailedRecipe = message.metadata.recipeData[0];
+                                const detailedRecipe = message.metadata.recipeDetail;
                                 // 백엔드 데이터를 RecipeDetailCard 형식으로 변환
                                 const recipeForCard = {
                                   title: detailedRecipe.title,
@@ -721,13 +719,20 @@ export default function WebSocketChatPage() {
                                       return String(ing); // 마지막 fallback
                                     }
                                   }),
-                                  steps: (detailedRecipe.instructions || []).map((inst: any) => ({
-                                    step: inst.stepNumber,
-                                    instruction: inst.instruction,
-                                    time: inst.estimatedTime,
-                                    tip: inst.tips ? inst.tips.join(' ') : undefined,
+                                  steps: (detailedRecipe.steps || []).map((stepObj: any, index: number) => ({
+                                    step: index + 1,
+                                    instruction: stepObj.instruction || String(stepObj),
+                                    time: stepObj.time || undefined,
+                                    tip: stepObj.tip || undefined,
                                   })),
-                                  tips: detailedRecipe.tips || [],
+                                  tips: (detailedRecipe.tips || []).map((tip: any) => {
+                                    if (typeof tip === 'string') {
+                                      return tip;
+                                    } else if (tip && typeof tip.instruction === 'string') {
+                                      return tip.instruction;
+                                    }
+                                    return ''; // Fallback to empty string if instruction is not a string
+                                  }).filter(Boolean), // Filter out any empty strings
                                   nutritionInfo: detailedRecipe.nutritionInfo,
                                   tags: detailedRecipe.tags || []
                                 };
