@@ -1,0 +1,36 @@
+name: 🚀 Deploy Frontend on NAS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    
+    steps:
+    - name: 📥 Checkout latest code
+      uses: actions/checkout@v4
+
+    - name: 🐳 Deploy with Docker Compose
+      run: |
+        echo "🔄 Stopping existing containers..."
+        docker-compose down
+
+        echo "🏗️ Building and starting containers..."
+        docker-compose up -d --build
+
+        echo "🧹 Cleaning up old images..."
+        docker image prune -f
+
+        echo "✅ Deployment completed!"
+        docker-compose ps
+
+    - name: 🎉 Success notification
+      if: success()
+      run: echo "Frontend deployment successful on NAS!"
+
+    - name: 💥 Failure notification  
+      if: failure()
+      run: echo "Frontend deployment failed!"
