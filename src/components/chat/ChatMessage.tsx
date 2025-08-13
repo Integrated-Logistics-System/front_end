@@ -5,8 +5,9 @@ import { ChatMessage as IChatMessage } from '@/types/chat.types';
 import { motion } from 'framer-motion';
 import { User, Bot, Clock, Zap } from 'lucide-react';
 import { MarkdownRenderer } from '@/components/ui/MarkdownRenderer';
-import { RecipeCard } from '@/components/recipe/RecipeCard';
 import { RecipeDetailCard } from '@/components/chat/RecipeDetailCard';
+import { parseRecipeMarkdown, isRecipeMarkdown } from '@/utils/recipeMarkdownParser';
+import { useState, useEffect } from 'react';
 
 interface ChatMessageProps {
   message: IChatMessage;
@@ -16,12 +17,40 @@ interface ChatMessageProps {
 export function ChatMessage({ message, isLast }: ChatMessageProps) {
   const isUser = message.isUser;
   const isStreaming = message.isStreaming;
+  const [isClient, setIsClient] = useState(false);
+
+  // 클라이언트에서만 동작하도록 설정 (Hydration 오류 방지)
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // AI 메시지가 레시피 마크다운 형태인지 확인하고 파싱
+  const parsedRecipe = !isUser && message.content && isRecipeMarkdown(message.content) 
+    ? parseRecipeMarkdown(message.content) 
+    : null;
+
+  // 안전한 타임스탬프 포맷팅
+  const formatTimestamp = (timestamp: string) => {
+    if (!isClient) return ''; // 서버에서는 빈 문자열 반환
+    try {
+      return new Date(timestamp).toLocaleTimeString('ko-KR', {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch {
+      return '';
+    }
+  };
+
+  const MotionDiv = isClient ? motion.div : 'div';
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
+    <MotionDiv
+      {...(isClient && {
+        initial: { opacity: 0, y: 20 },
+        animate: { opacity: 1, y: 0 },
+        transition: { duration: 0.3 }
+      })}
       className={cn(
         "flex w-full gap-3 px-4 py-3",
         isUser ? "justify-end" : "justify-start",
@@ -70,7 +99,20 @@ export function ChatMessage({ message, isLast }: ChatMessageProps) {
               <p className="whitespace-pre-wrap break-words">{message.content}</p>
             ) : (
               <div className="prose prose-sm max-w-none dark:prose-invert">
-                {message.content ? (
+                {parsedRecipe ? (
+                  // 파싱된 레시피가 있으면 레시피 카드 표시
+                  <div className="not-prose">
+                    <RecipeDetailCard 
+                      recipe={parsedRecipe}
+                      onBookmark={() => {
+                        console.log('Recipe bookmarked:', parsedRecipe.title);
+                      }}
+                      onShare={() => {
+                        console.log('Recipe shared:', parsedRecipe.title);
+                      }}
+                    />
+                  </div>
+                ) : message.content ? (
                   <MarkdownRenderer content={message.content} />
                 ) : isStreaming ? (
                   <div className="flex items-center gap-2 text-gray-500">
@@ -130,148 +172,133 @@ export function ChatMessage({ message, isLast }: ChatMessageProps) {
             isUser ? "text-right" : "text-left"
           )}
         >
-          {message.timestamp.toLocaleTimeString('ko-KR', {
-            hour: '2-digit',
-            minute: '2-digit',
-          })}
+          {formatTimestamp(message.timestamp)}
         </div>
 
         {/* 레시피 카드들 */}
                 {!isUser && message.metadata && (message.metadata.recipeData?.length > 0 || message.metadata.recipeDetail) && (
           <div className="mt-4 space-y-3">
-            {message.metadata.conversationType === 'recipe_detail' && message.metadata.recipeDetail ? (
-              // 레시피 상세 정보 - 백엔드에서 변환된 recipeDetail 우선 사용
-              (() => {
-                console.log('🔍 Backend Data Check:', {
-                  hasRecipeDetail: !!message.metadata?.recipeDetail,
-                  hasRecipeData: !!message.metadata?.recipeData,
-                  recipeDetail: message.metadata?.recipeDetail,
-                  conversationType: message.metadata.conversationType
-                });
-
-                // 백엔드에서 변환된 recipeDetail이 있으면 우선 사용
-                if (message.metadata?.recipeDetail) {
-                  console.log('🔍 Using Backend recipeDetail:', message.metadata.recipeDetail);
-                  return (
-                    <motion.div
-                      key="backend_recipe_detail"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0 }}
-                    >
-                      <RecipeDetailCard 
-                        recipe={message.metadata.recipeDetail}
-                        onBookmark={() => {
-                          console.log('Recipe bookmarked from backend recipeDetail');
-                        }}
-                        onShare={() => {
-                          console.log('Recipe shared from backend recipeDetail');
-                        }}
-                      />
-                    </motion.div>
-                  );
-                }
-
-                // 백엔드 recipeDetail이 없으면 프론트엔드에서 변환
-                if (message.metadata?.recipeData && message.metadata.recipeData.length > 0) {
-                  return message.metadata.recipeData.slice(0, 1).map((recipe, index) => {
-                    console.log('🔍 Fallback: Converting recipeData:', recipe);
-                    
-                    const recipeDetail = {
-                      title: recipe.nameKo || recipe.name || '레시피',
-                      description: recipe.descriptionKo || recipe.description || '',
-                      cookingTime: recipe.minutes ? `${recipe.minutes}분` : 'N/A',
-                      difficulty: recipe.difficulty || '보통',
-                      servings: recipe.nIngredients || null,
-                      servingsText: recipe.nIngredients ? `${recipe.nIngredients}개 재료` : 'N/A',
-                      rating: recipe.averageRating || undefined,
-                      tags: recipe.tagsKo || recipe.tags || [],
-                      ingredients: recipe.ingredientsKo || recipe.ingredients || [],
-                      steps: (recipe.stepsKo || recipe.steps || []).map((step: string, stepIndex: number) => ({
-                        step: stepIndex + 1,
-                        instruction: step,
-                        time: undefined,
-                        tip: undefined,
-                      })),
-                      tips: recipe.tips || [],
-                      nutritionInfo: recipe.nutritionInfo || undefined,
-                    };
-
-                    console.log('🔍 Frontend Converted RecipeDetail:', recipeDetail);
-                    
-                    return (
-                      <motion.div
-                        key={recipe.id || index}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                      >
-                        <RecipeDetailCard 
-                          recipe={recipeDetail}
-                          onBookmark={() => {
-                            console.log('Recipe bookmarked:', recipe.id);
-                          }}
-                          onShare={() => {
-                            console.log('Recipe shared:', recipe.id);
-                          }}
-                        />
-                      </motion.div>
-                    );
-                  });
-                }
-
-                // 둘 다 없으면 에러 메시지
-                return (
-                  <div className="p-4 bg-red-900/20 rounded-lg border border-red-500/30">
-                    <p className="text-red-300">레시피 데이터를 불러올 수 없습니다.</p>
-                  </div>
-                );
-              })()
+            {(message.metadata.intent === 'recipe_detail' || message.metadata.conversationType === 'recipe_detail') && message.metadata.recipeDetail ? (
+              // 레시피 상세 정보 카드 표시
+              <MotionDiv
+                key="recipe_detail_card"
+                {...(isClient && {
+                  initial: { opacity: 0, y: 20 },
+                  animate: { opacity: 1, y: 0 },
+                  transition: { delay: 0.2 }
+                })}
+              >
+                <RecipeDetailCard 
+                  recipe={{
+                    title: message.metadata.recipeDetail.title || '레시피',
+                    description: message.metadata.recipeDetail.description || '',
+                    cookingTime: typeof message.metadata.recipeDetail.cookingTime === 'number' 
+                      ? `${message.metadata.recipeDetail.cookingTime}분` 
+                      : String(message.metadata.recipeDetail.cookingTime || '30분'),
+                    difficulty: message.metadata.recipeDetail.difficulty === 'easy' ? '쉬움' :
+                                message.metadata.recipeDetail.difficulty === 'hard' ? '어려움' : '보통',
+                    servings: message.metadata.recipeDetail.servings || null,
+                    servingsText: message.metadata.recipeDetail.servings 
+                      ? `${message.metadata.recipeDetail.servings}인분`
+                      : 'N/A',
+                    rating: message.metadata.recipeDetail.rating,
+                    ingredientCount: message.metadata.recipeDetail.ingredients?.length,
+                    tags: message.metadata.recipeDetail.tags || [],
+                    ingredients: message.metadata.recipeDetail.ingredients || [],
+                    steps: (message.metadata.recipeDetail.steps || []).map((step: any, stepIndex: number) => ({
+                      step: step.step || stepIndex + 1,
+                      instruction: step.instruction || String(step),
+                      time: step.time ? `${step.time}분` : undefined,
+                      tip: step.tip || undefined,
+                    })),
+                    tips: [],
+                    nutritionInfo: message.metadata.recipeDetail.nutrition ? {
+                      calories: `${message.metadata.recipeDetail.nutrition.calories}kcal`,
+                      protein: `${message.metadata.recipeDetail.nutrition.protein}g`,
+                      carbs: `${message.metadata.recipeDetail.nutrition.carbs}g`,
+                      fat: `${message.metadata.recipeDetail.nutrition.fat}g`,
+                    } : undefined,
+                  }}
+                  onBookmark={() => {
+                    console.log('Recipe bookmarked:', message.metadata?.recipeDetail?.id);
+                  }}
+                  onShare={() => {
+                    console.log('Recipe shared:', message.metadata?.recipeDetail?.id);
+                  }}
+                />
+              </MotionDiv>
             ) : (
-              // 레시피 목록 - RecipeCard 사용 
+              // 레시피 목록 카드들
               message.metadata.recipeData.slice(0, 6).map((recipe, index) => (
-                <motion.div
+                <MotionDiv
                   key={recipe.id || index}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
+                  {...(isClient && {
+                    initial: { opacity: 0, y: 20 },
+                    animate: { opacity: 1, y: 0 },
+                    transition: { delay: index * 0.1 }
+                  })}
+                  className="bg-gradient-to-br from-orange-950/40 to-amber-950/30 rounded-2xl border border-orange-500/20 p-4 hover:border-orange-400/40 transition-all duration-200 hover:shadow-lg hover:shadow-orange-500/10"
                 >
-                  <RecipeCard
-                    recipe={{
-                      id: recipe.id || `recipe_${index}`,
-                      name: recipe.name || '',
-                      nameKo: recipe.nameKo || recipe.name || '',
-                      nameEn: recipe.nameEn || recipe.name || '',
-                      description: recipe.description || '',
-                      descriptionKo: recipe.description || '',
-                      descriptionEn: recipe.description || '',
-                      image: recipe.image || undefined,
-                      minutes: recipe.minutes || 0,
-                      nIngredients: recipe.nIngredients || 0,
-                      nSteps: recipe.nSteps || 0,
-                      difficulty: recipe.difficulty || 'medium',
-                      tags: recipe.tags || [],
-                      tagsKo: recipe.tagsKo || recipe.tags || [],
-                      tagsEn: recipe.tagsEn || recipe.tags || [],
-                      averageRating: recipe.averageRating || 0,
-                      userRating: recipe.userRating || 0,
-                      isBookmarked: recipe.isBookmarked || false,
-                      ingredients: recipe.ingredients || [],
-                      ingredientsKo: recipe.ingredientsKo || recipe.ingredients || [],
-                      ingredientsEn: recipe.ingredientsEn || recipe.ingredients || [],
-                      steps: recipe.steps || [],
-                      stepsKo: recipe.stepsKo || recipe.steps || [],
-                      stepsEn: recipe.stepsEn || recipe.steps || [],
-                    }}
-                    viewMode="grid"
-                    onBookmark={(id) => {
-                      console.log('Recipe bookmarked:', id);
-                    }}
-                    onRate={(id, rating) => {
-                      console.log('Recipe rated:', id, rating);
-                    }}
-                  />
-                </motion.div>
+                  <div className="flex flex-col space-y-3">
+                    {/* 레시피 제목 및 기본 정보 */}
+                    <div>
+                      <h4 className="text-lg font-semibold text-orange-100 mb-1">
+                        {recipe.nameKo || recipe.name || '레시피'}
+                      </h4>
+                      {recipe.description && (
+                        <p className="text-orange-200/80 text-sm line-clamp-2">
+                          {recipe.descriptionKo || recipe.description}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* 메타 정보 */}
+                    <div className="flex flex-wrap items-center gap-2">
+                      {recipe.minutes && (
+                        <div className="flex items-center gap-1 px-2 py-1 bg-orange-700/30 rounded-lg">
+                          <Clock className="h-3 w-3 text-orange-400" />
+                          <span className="text-xs text-orange-200">{recipe.minutes}분</span>
+                        </div>
+                      )}
+                      {recipe.nIngredients && (
+                        <div className="flex items-center gap-1 px-2 py-1 bg-green-700/30 rounded-lg">
+                          <User className="h-3 w-3 text-green-400" />
+                          <span className="text-xs text-green-200">{recipe.nIngredients}개 재료</span>
+                        </div>
+                      )}
+                      {recipe.difficulty && (
+                        <div className="px-2 py-1 bg-blue-700/30 rounded-lg">
+                          <span className="text-xs text-blue-200">{recipe.difficulty}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 태그들 */}
+                    {(recipe.tagsKo || recipe.tags) && (recipe.tagsKo || recipe.tags).length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {(recipe.tagsKo || recipe.tags).slice(0, 3).map((tag: string, tagIndex: number) => (
+                          <span
+                            key={tagIndex}
+                            className="px-2 py-1 bg-orange-600/20 text-orange-300 rounded-full text-xs"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* 상세보기 버튼 */}
+                    <button
+                      onClick={() => {
+                        console.log('Recipe detail requested:', recipe.id);
+                        // TODO: 레시피 상세 정보 요청 로직
+                      }}
+                      className="w-full mt-2 px-3 py-2 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white text-sm font-medium rounded-lg transition-all duration-200 hover:shadow-md"
+                    >
+                      상세보기
+                    </button>
+                  </div>
+                </MotionDiv>
               ))
             )}
           </div>
@@ -280,21 +307,26 @@ export function ChatMessage({ message, isLast }: ChatMessageProps) {
         {/* 제안된 후속 질문 */}
         {message.metadata?.suggestedFollowups && message.metadata.suggestedFollowups.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-2">
-            {message.metadata.suggestedFollowups.map((followup, index) => (
-              <motion.button
-                key={index}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.1 }}
-                className="px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-full transition-colors cursor-pointer border border-gray-200 dark:border-gray-600"
-                onClick={() => {
-                  // TODO: 후속 질문 클릭 핸들러
-                  console.log('Followup clicked:', followup);
-                }}
-              >
-                {followup}
-              </motion.button>
-            ))}
+            {message.metadata.suggestedFollowups.map((followup, index) => {
+              const MotionButton = isClient ? motion.button : 'button';
+              return (
+                <MotionButton
+                  key={index}
+                  {...(isClient && {
+                    initial: { opacity: 0, scale: 0.9 },
+                    animate: { opacity: 1, scale: 1 },
+                    transition: { delay: index * 0.1 }
+                  })}
+                  className="px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-full transition-colors cursor-pointer border border-gray-200 dark:border-gray-600"
+                  onClick={() => {
+                    // TODO: 후속 질문 클릭 핸들러
+                    console.log('Followup clicked:', followup);
+                  }}
+                >
+                  {followup}
+                </MotionButton>
+              );
+            })}
           </div>
         )}
       </div>
@@ -307,6 +339,6 @@ export function ChatMessage({ message, isLast }: ChatMessageProps) {
           </div>
         </div>
       )}
-    </motion.div>
+    </MotionDiv>
   );
 }

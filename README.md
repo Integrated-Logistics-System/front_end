@@ -1,11 +1,15 @@
-# 🌐 Recipe AI - Frontend
+# 🍳 Recipe AI - Frontend
 
 Next.js 기반 AI 레시피 채팅 인터페이스
 
+> **📂 레포지토리 구조**: 이 프로젝트는 프론트엔드와 백엔드가 분리된 마이크로서비스 구조입니다.
+> - **🌐 프론트엔드**: 이 레포지토리 (Next.js + Nginx)  
+> - **⚙️ 백엔드**: [recipe-ai-backend](https://github.com/choeseonghyeon/recipe-ai-backend) (NestJS)
+
 ## 📋 프로젝트 개요
 
-**기술 스택**: Next.js 14 + TypeScript + TailwindCSS + Socket.IO + React Query
-**핵심 기능**: 실시간 AI 채팅, 스트리밍 응답, 사용자 인증, 반응형 UI
+**기술 스택**: Next.js 14 + TypeScript + TailwindCSS + Socket.IO + React Query + Docker + Nginx  
+**핵심 기능**: 실시간 AI 채팅, 스트리밍 응답, 사용자 인증, 반응형 UI, 프록시 라우팅
 
 ## 🏗 아키텍처
 

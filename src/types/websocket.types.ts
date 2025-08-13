@@ -1,14 +1,7 @@
-
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-}
-
 export interface ConnectionStatus {
   connected: boolean;
-  authenticated: boolean;
-  user?: User;
+  clientId?: string;
+  timestamp: number;
 }
 
 export interface ChatMessage {
@@ -37,6 +30,7 @@ export interface ConversationChunk {
     recipeData?: any[];
     recipeDetail?: any;
   };
+  timestamp?: number;
 }
 
 export interface ConversationResponse {
@@ -68,4 +62,5 @@ export interface ConversationHistory {
 export interface SocketError {
   message: string;
   error?: string;
+  timestamp?: number;
 }

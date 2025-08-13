@@ -1,50 +1,59 @@
-# 🚀 Next.js Frontend Dockerfile
-FROM node:20-alpine AS builder
+# Multi-stage build for Next.js frontend
+FROM node:24-alpine AS base
 
-# 작업 디렉토리 설정
+# Install system deps
+RUN apk add --no-cache libc6-compat curl
+
 WORKDIR /app
 
-# 패키지 파일 복사
+# ------------------------------
+# Dependencies stage
+# ------------------------------
+FROM base AS deps
 COPY package*.json ./
+RUN npm ci --legacy-peer-deps
 
-# 의존성 설치 (npm ci 실패 시 npm install 폴백)
-RUN npm ci --omit=dev || npm install --omit=dev
-RUN npm cache clean --force
-
-# 소스 코드 복사
+# ------------------------------
+# Build stage
+# ------------------------------
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Next.js 빌드 (프로덕션 최적화)
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
+
 RUN npm run build
 
-# 🏃 Production 스테이지
-FROM node:20-alpine AS production
-
-# curl 설치 (헬스체크용)
-RUN apk add --no-cache curl
-
-# 보안을 위한 비특권 사용자
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nextjs -u 1001
-
+# ------------------------------
+# Production stage
+# ------------------------------
+FROM node:24-alpine AS runner
 WORKDIR /app
 
-# Next.js 실행에 필요한 파일들만 복사
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# System deps
+RUN apk add --no-cache libc6-compat curl
 
-# public 디렉터리 복사 (정적 자산)
-COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+# Non-root user
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
 
-# 포트 노출
-EXPOSE 3000
+# Copy built app & node_modules
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=builder /app/public ./public
 
-# 비특권 사용자로 실행
 USER nextjs
 
-# 헬스체크 추가
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:3000/api/health || exit 1
+EXPOSE 3000
+ENV PORT=3000
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
-# Next.js 시작
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:3000 || exit 1
+
 CMD ["node", "server.js"]

@@ -68,10 +68,6 @@ const getMealTypeInKorean = (mealType: string): string => {
 };
 
 export function RecipeDetailCard({ recipe, onBookmark, onShare }: RecipeDetailCardProps) {
-  console.log('🔍 RecipeDetailCard received recipe:', recipe);
-  console.log('🔍 Steps data:', recipe.steps);
-  console.log('🔍 Steps length:', recipe.steps?.length);
-  console.log('🔍 First step:', recipe.steps?.[0]);
   return (
     <div className="w-full max-w-4xl mx-auto bg-gradient-to-br from-orange-950/60 to-amber-950/50 rounded-3xl border border-orange-500/30 overflow-hidden shadow-2xl shadow-orange-500/10">
       {/* 헤더 섹션 */}
@@ -201,41 +197,38 @@ export function RecipeDetailCard({ recipe, onBookmark, onShare }: RecipeDetailCa
             </div>
             
             <div className="space-y-4">
-              {recipe.steps.map((step, index) => {
-                console.log(`🔍 Rendering step ${index}:`, step);
-                return (
-              <div
-                key={index}
-                className="relative pl-6 pb-6 border-l-2 border-orange-500/30 last:border-l-0 last:pb-0"
-              >
-                {/* 단계 번호 */}
-                <div className="absolute -left-4 top-0 w-8 h-8 bg-gradient-to-r from-orange-600 to-amber-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                  {String(step.step)}
-                </div>
-                
-                <div className="ml-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <p className="text-orange-100 text-sm leading-relaxed flex-1">
-                      {String(step.instruction)}
-                    </p>
-                    {step.time && (
-                      <div className="flex items-center gap-1 ml-4 px-2 py-1 bg-amber-700/30 rounded-lg">
-                        <Timer className="h-3 w-3 text-amber-400" />
-                        <span className="text-xs text-amber-300">{String(step.time)}</span>
+              {recipe.steps.map((step, index) => (
+                <div
+                  key={index}
+                  className="relative pl-6 pb-6 border-l-2 border-orange-500/30 last:border-l-0 last:pb-0"
+                >
+                  {/* 단계 번호 */}
+                  <div className="absolute -left-4 top-0 w-8 h-8 bg-gradient-to-r from-orange-600 to-amber-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                    {step.step}
+                  </div>
+                  
+                  <div className="ml-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <p className="text-orange-100 text-sm leading-relaxed flex-1">
+                        {step.instruction}
+                      </p>
+                      {step.time && (
+                        <div className="flex items-center gap-1 ml-4 px-2 py-1 bg-amber-700/30 rounded-lg">
+                          <Timer className="h-3 w-3 text-amber-400" />
+                          <span className="text-xs text-amber-300">{step.time}</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {step.tip && (
+                      <div className="flex items-start gap-2 mt-2 p-3 bg-blue-900/20 rounded-lg border border-blue-600/20">
+                        <Lightbulb className="h-4 w-4 text-blue-400 flex-shrink-0 mt-0.5" />
+                        <p className="text-blue-200 text-xs leading-relaxed">{step.tip}</p>
                       </div>
                     )}
                   </div>
-                  
-                  {step.tip && (
-                    <div className="flex items-start gap-2 mt-2 p-3 bg-blue-900/20 rounded-lg border border-blue-600/20">
-                      <Lightbulb className="h-4 w-4 text-blue-400 flex-shrink-0 mt-0.5" />
-                      <p className="text-blue-200 text-xs leading-relaxed">{String(step.tip)}</p>
-                    </div>
-                  )}
                 </div>
-              </div>
-                );
-              })}
+              ))}
             </div>
           </div>
         ) : (
@@ -284,25 +277,25 @@ export function RecipeDetailCard({ recipe, onBookmark, onShare }: RecipeDetailCa
             </div>
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {recipe.nutritionInfo.calories && (
+              {recipe.nutritionInfo?.calories && (
                 <div className="text-center p-3 bg-red-900/20 rounded-xl border border-red-600/20">
                   <div className="text-lg font-bold text-red-300">{recipe.nutritionInfo.calories}</div>
                   <div className="text-xs text-red-400">칼로리</div>
                 </div>
               )}
-              {recipe.nutritionInfo.protein && (
+              {recipe.nutritionInfo?.protein && (
                 <div className="text-center p-3 bg-blue-900/20 rounded-xl border border-blue-600/20">
                   <div className="text-lg font-bold text-blue-300">{recipe.nutritionInfo.protein}</div>
                   <div className="text-xs text-blue-400">단백질</div>
                 </div>
               )}
-              {recipe.nutritionInfo.carbs && (
+              {recipe.nutritionInfo?.carbs && (
                 <div className="text-center p-3 bg-yellow-900/20 rounded-xl border border-yellow-600/20">
                   <div className="text-lg font-bold text-yellow-300">{recipe.nutritionInfo.carbs}</div>
                   <div className="text-xs text-yellow-400">탄수화물</div>
                 </div>
               )}
-              {recipe.nutritionInfo.fat && (
+              {recipe.nutritionInfo?.fat && (
                 <div className="text-center p-3 bg-purple-900/20 rounded-xl border border-purple-600/20">
                   <div className="text-lg font-bold text-purple-300">{recipe.nutritionInfo.fat}</div>
                   <div className="text-xs text-purple-400">지방</div>

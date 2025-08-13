@@ -17,6 +17,10 @@ out/
 .env.production
 .env.staging
 .env.development
+.env.compose
+.env
+!.env
+!.env.compose.example
 
 # IDE files
 .vscode/
