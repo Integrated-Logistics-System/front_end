@@ -4,10 +4,10 @@
   "description": "AI Recipe Assistant Frontend - RAG + LangChain",
   "private": true,
   "scripts": {
-    "dev": "cp .env.dev .env.local && next dev -p 3000",
-    "dev:prod": "cp .env .env.local && next dev -p 3000",
+    "dev": "next dev -p 3000",
+    "dev:prod": "next dev -p 3000",
     "build": "next build",
-    "start": "next start -p 80",
+    "start": "node .next/standalone/server.js",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
     "type-check": "tsc --noEmit",
