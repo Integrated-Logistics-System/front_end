@@ -87,7 +87,7 @@ export function parseRecipeFromText(text: string): RecipeDetail | null {
     return null;
   }
 
-  let recipe: Partial<RecipeDetail> = {};
+  const recipe: Partial<RecipeDetail> = {};
 
   // 제목 추출
   for (const pattern of recipePatterns.title) {

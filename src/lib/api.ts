@@ -60,7 +60,7 @@ class ApiClient {
 
   async get<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
     const response = await this.client.get(url, config);
-    console.log('📚 apiClient.get: full response object:', response);
+    // API response received
     return response.data;
   }
 

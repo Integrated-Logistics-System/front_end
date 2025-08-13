@@ -31,33 +31,30 @@ export const useSimpleChat = () => {
 
     // 스트리밍 청크 리스너
     webSocketService.onConversationChunk((chunk: ConversationChunk) => {
-      // 스트리밍 중 연결 상태 로깅
-      console.log(`🔴 Received chunk:`, chunk);
-      console.log(`📡 Chunk type: ${chunk.type}, Content: "${chunk.content}", Connection: ${webSocketService.isConnected()}`);
+      // 스트리밍 중 연결 상태 체크
       
       if (chunk.type === 'typing') {
-        console.log('👀 Setting typing indicator');
+        // Setting typing indicator
         setStreamingMessage('AI가 입력 중...');
       } else if (chunk.type === 'token' && chunk.content) {
-        console.log(`📝 Adding token: "${chunk.content}"`);
+        // Adding token
         setStreamingMessage(prev => {
           const newMessage = prev + chunk.content;
-          console.log(`🔄 Current streaming message: "${newMessage}"`);
+          // Current streaming message
           return newMessage;
         });
         
         // 토큰 수신 중 연결 상태 주기적 확인 (디버깅용)
         if (!webSocketService.isConnected()) {
-          console.warn('Connection lost during token streaming!');
+          // Connection lost during token streaming
         }
       } else if ((chunk.type === 'content' && chunk.isComplete) || chunk.type === 'complete') {
         // 스트리밍 완료 - AI 메시지 추가
-        console.log('Streaming completed successfully', chunk.metadata);
+        // Streaming completed successfully
         
         // 완료 시점에 받은 전체 내용 사용 (chunk.content가 있으면 우선 사용)
         const finalContent = chunk.content || streamingMessage;
-        console.log('Final content:', finalContent);
-        console.log('Chunk metadata:', chunk.metadata);
+        // Final content and metadata processed
         
         const aiMessage: ChatMessage = {
           id: Date.now().toString(),
@@ -69,13 +66,13 @@ export const useSimpleChat = () => {
           metadata: chunk.metadata,
         };
         
-        console.log('Created AI message:', aiMessage);
+        // Created AI message
         
         // 메시지 추가와 스트리밍 메시지 초기화를 분리
         setMessages(prev => [...prev, aiMessage]);
         setStreamingMessage('');
       } else if (chunk.type === 'error') {
-        console.error('Chat error:', chunk.content);
+        // Chat error occurred
         setStreamingMessage('');
       }
     });
@@ -97,7 +94,7 @@ export const useSimpleChat = () => {
 
     // 에러 리스너
     webSocketService.onError((error) => {
-      console.error('WebSocket error:', error);
+      // WebSocket error
       setStreamingMessage('');
     });
 
@@ -105,7 +102,7 @@ export const useSimpleChat = () => {
       webSocketService.removeAllListeners();
       webSocketService.disconnect();
     };
-  }, [setConnectionStatus, setMessages, setStreamingMessage]);
+  }, [setConnectionStatus, setMessages, setStreamingMessage, streamingMessage]);
 
   // 메시지 전송
   const sendMessage = useCallback(async (text: string) => {
@@ -113,14 +110,14 @@ export const useSimpleChat = () => {
 
     // 연결 상태 확인
     if (!webSocketService.isConnected()) {
-      console.warn('WebSocket not connected, attempting to reconnect...');
+      // WebSocket not connected, attempting to reconnect
       webSocketService.connect();
       
       // 잠시 대기 후 연결 상태 재확인
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       if (!webSocketService.isConnected()) {
-        console.error('Failed to establish WebSocket connection');
+        // Failed to establish WebSocket connection
         return;
       }
     }
@@ -149,7 +146,7 @@ export const useSimpleChat = () => {
       cookingLevel: cookingLevel
     };
 
-    console.log(`Sending message via WebSocket. Connection ID: ${webSocketService.getSocketId()}`);
+    // Sending message via WebSocket
     
     // WebSocket으로 메시지 전송 (컨텍스트 포함)
     webSocketService.sendMessage(text.trim(), undefined, context);

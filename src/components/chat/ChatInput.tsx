@@ -73,13 +73,11 @@ export function ChatInput({
   const toggleVoiceInput = useCallback(() => {
     setIsVoiceActive(!isVoiceActive);
     // TODO: 음성 인식 로직 구현
-    console.log('Voice input toggled:', !isVoiceActive);
   }, [isVoiceActive]);
 
   // 첨부파일 처리
   const handleAttachment = useCallback(() => {
     // TODO: 파일 첨부 로직 구현
-    console.log('File attachment clicked');
   }, []);
 
   const isMessageValid = message.trim().length > 0;

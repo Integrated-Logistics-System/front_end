@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 import { ChefHat, Menu, X, Search, MessageCircle, LogOut, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
-import { AllergySettingsSidebar } from '@/components/ui/AllergySettingsSidebar';
+import { AllergySettings } from '@/components/ui/AllergySettings';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthViewModel } from '@/viewmodels/AuthViewModel';
 import { useRouter } from 'next/navigation';
@@ -21,14 +21,9 @@ export function Header() {
   const { cookingLevel, isLoading: profileLoading } = useUserProfile(); // 디버깅용
   const router = useRouter();
 
-  // 디버깅용 useEffect
+  // Header 상태 체크
   useEffect(() => {
-    console.log('🔍 Header 상태 체크:', {
-      isAuthenticated,
-      user: user ? { id: user.id, email: user.email } : null,
-      cookingLevel,
-      profileLoading
-    });
+    // Header 상태 디버깅
   }, [isAuthenticated, user, cookingLevel, profileLoading]);
 
   const menuItems = [
@@ -46,11 +41,7 @@ export function Header() {
   };
 
   const handleCookingLevelClick = () => {
-    console.log('🔍 쿠킹 레벨 버튼 클릭됨:', {
-      isAuthenticated,
-      user: !!user,
-      cookingLevel
-    });
+    // 쿠킹 레벨 버튼 클릭
     setIsCookingLevelSidebarOpen(true);
   };
 
@@ -255,7 +246,7 @@ export function Header() {
         </AnimatePresence>
 
         {/* 알레르기 설정 사이드바 */}
-        <AllergySettingsSidebar
+        <AllergySettings
             isOpen={isAllergySidebarOpen}
             onClose={() => setIsAllergySidebarOpen(false)}
         />

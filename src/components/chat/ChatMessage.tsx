@@ -30,10 +30,11 @@ export function ChatMessage({ message, isLast }: ChatMessageProps) {
     : null;
 
   // 안전한 타임스탬프 포맷팅
-  const formatTimestamp = (timestamp: string) => {
+  const formatTimestamp = (timestamp: Date | string) => {
     if (!isClient) return ''; // 서버에서는 빈 문자열 반환
     try {
-      return new Date(timestamp).toLocaleTimeString('ko-KR', {
+      const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
+      return date.toLocaleTimeString('ko-KR', {
         hour: '2-digit',
         minute: '2-digit',
       });
@@ -105,10 +106,10 @@ export function ChatMessage({ message, isLast }: ChatMessageProps) {
                     <RecipeDetailCard 
                       recipe={parsedRecipe}
                       onBookmark={() => {
-                        console.log('Recipe bookmarked:', parsedRecipe.title);
+                        // Recipe bookmarked
                       }}
                       onShare={() => {
-                        console.log('Recipe shared:', parsedRecipe.title);
+                        // Recipe shared
                       }}
                     />
                   </div>
@@ -220,10 +221,10 @@ export function ChatMessage({ message, isLast }: ChatMessageProps) {
                     } : undefined,
                   }}
                   onBookmark={() => {
-                    console.log('Recipe bookmarked:', message.metadata?.recipeDetail?.id);
+                    // Recipe bookmarked
                   }}
                   onShare={() => {
-                    console.log('Recipe shared:', message.metadata?.recipeDetail?.id);
+                    // Recipe shared
                   }}
                 />
               </MotionDiv>
@@ -290,7 +291,7 @@ export function ChatMessage({ message, isLast }: ChatMessageProps) {
                     {/* 상세보기 버튼 */}
                     <button
                       onClick={() => {
-                        console.log('Recipe detail requested:', recipe.id);
+                        // Recipe detail requested
                         // TODO: 레시피 상세 정보 요청 로직
                       }}
                       className="w-full mt-2 px-3 py-2 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white text-sm font-medium rounded-lg transition-all duration-200 hover:shadow-md"
@@ -320,7 +321,7 @@ export function ChatMessage({ message, isLast }: ChatMessageProps) {
                   className="px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-full transition-colors cursor-pointer border border-gray-200 dark:border-gray-600"
                   onClick={() => {
                     // TODO: 후속 질문 클릭 핸들러
-                    console.log('Followup clicked:', followup);
+                    // Followup clicked
                   }}
                 >
                   {followup}

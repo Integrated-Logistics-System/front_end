@@ -10,7 +10,7 @@ export function parseRecipeMarkdown(markdownText: string): RecipeDetail | null {
     const title = titleMatch ? titleMatch[1].trim() : '레시피';
 
     // 재료 섹션 파싱
-    const ingredientsMatch = markdownText.match(/🥘\s*\*\*재료\*\*(.*?)(?=🔥|💡|⚠️|$)/s);
+    const ingredientsMatch = markdownText.match(/🥘\s*\*\*재료\*\*([\s\S]*?)(?=🔥|💡|⚠️|$)/);
     const ingredients: string[] = [];
     if (ingredientsMatch) {
       const ingredientLines = ingredientsMatch[1]
@@ -21,7 +21,7 @@ export function parseRecipeMarkdown(markdownText: string): RecipeDetail | null {
     }
 
     // 조리법 섹션 파싱
-    const stepsMatch = markdownText.match(/🔥\s*\*\*조리법\*\*(.*?)(?=💡|⚠️|$)/s);
+    const stepsMatch = markdownText.match(/🔥\s*\*\*조리법\*\*([\s\S]*?)(?=💡|⚠️|$)/);
     const steps: { step: number; instruction: string; time?: string; tip?: string }[] = [];
     if (stepsMatch) {
       const stepLines = stepsMatch[1]
@@ -41,7 +41,7 @@ export function parseRecipeMarkdown(markdownText: string): RecipeDetail | null {
     }
 
     // 요리 팁 파싱
-    const tipsMatch = markdownText.match(/💡\s*\*\*요리 팁\*\*(.*?)(?=⚠️|💡|$)/s);
+    const tipsMatch = markdownText.match(/💡\s*\*\*요리 팁\*\*([\s\S]*?)(?=⚠️|💡|$)/);
     const tips: string[] = [];
     if (tipsMatch) {
       const tipLines = tipsMatch[1]
@@ -79,7 +79,7 @@ export function parseRecipeMarkdown(markdownText: string): RecipeDetail | null {
 
     return recipeDetail;
   } catch (error) {
-    console.error('레시피 마크다운 파싱 실패:', error);
+    // 레시피 마크다운 파싱 실패
     return null;
   }
 }

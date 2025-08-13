@@ -16,7 +16,7 @@ export interface ChatMessage {
 }
 
 export interface ConversationChunk {
-  type: 'typing' | 'token' | 'content' | 'error';
+  type: 'typing' | 'token' | 'content' | 'error' | 'complete';
   content?: string;
   isComplete?: boolean;
   sessionId?: string;

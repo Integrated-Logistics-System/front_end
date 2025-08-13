@@ -14,7 +14,7 @@ export const chatMessagesState = atom<ChatMessage[]>({
           try {
             setSelf(JSON.parse(savedMessages));
           } catch (e) {
-            console.error('Failed to parse saved chat messages:', e);
+            // Failed to parse saved chat messages
           }
         }
       }
@@ -62,7 +62,7 @@ export const userAllergiesState = atom<string[]>({
           try {
             setSelf(JSON.parse(savedAllergies));
           } catch (e) {
-            console.error('Failed to parse saved allergies:', e);
+            // Failed to parse saved allergies
           }
         }
       }
@@ -118,7 +118,7 @@ export const bookmarkedRecipesState = atom<any[]>({
           try {
             setSelf(JSON.parse(savedBookmarks));
           } catch (e) {
-            console.error('Failed to parse saved bookmarks:', e);
+            // Failed to parse saved bookmarks
           }
         }
       }
