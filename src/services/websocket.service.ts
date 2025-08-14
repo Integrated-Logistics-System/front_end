@@ -1,5 +1,6 @@
 import { io, Socket } from 'socket.io-client';
 import { ConnectionStatus, SocketError, ConversationChunk, ConversationHistory, ConversationResponse } from '@/types/websocket.types';
+import { config } from '@/lib/config';
 
 class WebSocketService {
   private socket: Socket | null = null;
@@ -10,16 +11,13 @@ class WebSocketService {
       return;
     }
 
-    const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:8083';
-
-    const reconnectAttempts = parseInt(process.env.NEXT_PUBLIC_WS_RECONNECT_ATTEMPTS || '5');
-    const reconnectDelay = parseInt(process.env.NEXT_PUBLIC_WS_RECONNECT_DELAY || '3000');
+    const WS_URL = config.api.wsUrl;
 
     this.socket = io(WS_URL, {
       transports: ['websocket', 'polling'],
-      reconnectionAttempts: reconnectAttempts,
-      reconnectionDelay: reconnectDelay,
-      timeout: 120000, // 2분 연결 타임아웃
+      reconnectionAttempts: config.websocket.reconnectAttempts,
+      reconnectionDelay: config.websocket.reconnectDelay,
+      timeout: config.websocket.timeout,
       autoConnect: true,
       forceNew: false,
       upgrade: true,
@@ -75,13 +73,13 @@ class WebSocketService {
   private startPingInterval() {
     this.stopPingInterval(); // 기존 인터벌 정리
     
-    // 30초마다 ping 전송 (백엔드 pingInterval 25초보다 약간 길게)
+    // ping 전송 (백엔드 pingInterval보다 약간 길게)
     this.pingInterval = setInterval(() => {
       if (this.socket && this.socket.connected) {
         // Sending ping to maintain connection
         this.socket.emit('ping');
       }
-    }, 30000);
+    }, config.websocket.pingInterval);
   }
 
   private stopPingInterval() {

@@ -5,14 +5,19 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000",
-    "dev:prod": "next dev -p 3000",
+    "dev:prod": "NODE_ENV=production next dev -p 3000",
     "build": "next build",
+    "build:dev": "NODE_ENV=development next build",
+    "build:prod": "NODE_ENV=production next build",
     "start": "node .next/standalone/server.js",
+    "start:dev": "NODE_ENV=development node .next/standalone/server.js",
+    "start:prod": "NODE_ENV=production node .next/standalone/server.js",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
     "type-check": "tsc --noEmit",
     "clean": "rm -rf .next",
-    "analyze": "cross-env ANALYZE=true next build"
+    "analyze": "cross-env ANALYZE=true next build",
+    "env:check": "node -e \"console.log('Environment:', process.env.NODE_ENV); console.log('API URL:', process.env.NEXT_PUBLIC_API_URL); console.log('WS URL:', process.env.NEXT_PUBLIC_WS_URL);\""
   },
   "dependencies": {
     "@hookform/resolvers": "^3.6.0",

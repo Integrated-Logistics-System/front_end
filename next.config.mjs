@@ -10,7 +10,7 @@ const nextConfig = {
   
   // 🖼️ 이미지 최적화
   images: {
-    domains: ['localhost', 'via.placeholder.com', '192.168.0.111'],
+    domains: process.env.NEXT_PUBLIC_IMAGE_DOMAINS?.split(',') || ['localhost', 'via.placeholder.com'],
     unoptimized: process.env.NODE_ENV === 'development',
     formats: ['image/webp', 'image/avif'],
   },
@@ -35,14 +35,17 @@ const nextConfig = {
       return [];
     }
     
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081/api';
+    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:8083';
+    
     return [
       {
         source: '/api/:path*',
-        destination: 'http://localhost:8081/api/:path*',
+        destination: `${apiUrl}/:path*`,
       },
       {
         source: '/ws/:path*',
-        destination: 'http://localhost:8083/:path*',
+        destination: `${wsUrl}/:path*`,
       },
     ];
   },

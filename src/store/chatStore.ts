@@ -106,32 +106,3 @@ export const cookingLevelState = atom<string>({
   ],
 });
 
-// 북마크된 레시피들 (로컬 스토리지)
-export const bookmarkedRecipesState = atom<any[]>({
-  key: 'bookmarkedRecipes',
-  default: [],
-  effects: [
-    ({ setSelf, onSet }) => {
-      if (typeof window !== 'undefined') {
-        const savedBookmarks = localStorage.getItem('bookmarkedRecipes');
-        if (savedBookmarks) {
-          try {
-            setSelf(JSON.parse(savedBookmarks));
-          } catch (e) {
-            // Failed to parse saved bookmarks
-          }
-        }
-      }
-
-      onSet((newValue, _, isReset) => {
-        if (typeof window !== 'undefined') {
-          if (isReset) {
-            localStorage.removeItem('bookmarkedRecipes');
-          } else {
-            localStorage.setItem('bookmarkedRecipes', JSON.stringify(newValue));
-          }
-        }
-      });
-    },
-  ],
-});
