@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { Providers } from '../components/providers';
-import SimpleConnectionStatus from '@/components/common/SimpleConnectionStatus';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -25,7 +24,6 @@ export default function RootLayout({
       <body className={`${inter.className} bg-gradient-to-br from-orange-950 via-amber-950 to-red-950`} suppressHydrationWarning>
         <Providers>
           {children}
-          <SimpleConnectionStatus />
         </Providers>
       </body>
     </html>
