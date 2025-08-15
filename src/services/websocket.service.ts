@@ -12,9 +12,30 @@ class WebSocketService {
     }
 
     const WS_URL = config.api.wsUrl;
+    
+    // URL 파싱: 상대경로면 현재 도메인 사용, 절대경로면 그대로 사용
+    let socketUrl: string;
+    let socketPath: string;
+    
+    if (WS_URL.startsWith('/')) {
+      // 상대경로: /socket.io
+      socketUrl = window.location.origin;
+      socketPath = WS_URL.endsWith('/') ? WS_URL : WS_URL + '/';
+    } else if (WS_URL.startsWith('http')) {
+      // 절대경로: http://localhost:8083
+      socketUrl = WS_URL;
+      socketPath = '/socket.io/';
+    } else {
+      // 기본값
+      socketUrl = window.location.origin;
+      socketPath = '/socket.io/';
+    }
 
-    this.socket = io(WS_URL, {
-      transports: ['websocket', 'polling'],
+    console.log('🔍 WebSocket 연결 시도:', { socketUrl, socketPath });
+
+    this.socket = io(socketUrl, {
+      path: socketPath,
+      transports: ['polling', 'websocket'], // polling 먼저 시도
       reconnectionAttempts: config.websocket.reconnectAttempts,
       reconnectionDelay: config.websocket.reconnectDelay,
       timeout: config.websocket.timeout,
@@ -24,19 +45,21 @@ class WebSocketService {
     });
 
     this.socket.on('connect', () => {
-      // Connected with socket ID
-      // 연결 후 정기적인 ping 시작
+      console.log('✅ WebSocket 연결 성공!', {
+        socketId: this.socket?.id,
+        url: socketUrl,
+        path: socketPath
+      });
       this.startPingInterval();
     });
 
     this.socket.on('disconnect', (reason) => {
-      // Disconnected
-      // 연결 끊김 시 ping 인터벌 정리
+      console.log('🔌 WebSocket 연결 끊김:', reason);
       this.stopPingInterval();
     });
 
     this.socket.on('connect_error', (error) => {
-      // Connection Error
+      console.error('❌ WebSocket 연결 실패:', error);
       this.stopPingInterval();
     });
 
