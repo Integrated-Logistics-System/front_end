@@ -1,139 +1,35 @@
-name: 🚀 Recipe AI Frontend Deploy
+name: Deploy Frontend
 
 on:
   push:
-    branches: [ main, develop ]
-  pull_request:
     branches: [ main ]
   workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Environment to deploy to'
-        required: true
-        default: 'production'
-        type: choice
-        options:
-          - production
-          - staging
 
 jobs:
-  # 🧪 Test and Build
-  test:
-    name: 🧪 Test & Build
-    runs-on: self-hosted
-    
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-
-      - name: 📦 Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-
-      - name: 📥 Install dependencies
-        run: npm ci
-
-      - name: 🔍 Type checking
-        run: npm run type-check
-
-      - name: 🧹 Lint code
-        run: npm run lint
-
-      - name: 🏗️ Build application
-        run: npm run build
-        env:
-          NODE_ENV: production
-          NEXT_TELEMETRY_DISABLED: 1
-
-      - name: 📊 Build summary
-        run: |
-          echo "## 📊 Frontend Build Analysis" >> $GITHUB_STEP_SUMMARY
-          echo "### ✅ Build completed successfully" >> $GITHUB_STEP_SUMMARY
-          if [ -d ".next" ]; then
-            echo "### Build artifacts:" >> $GITHUB_STEP_SUMMARY
-            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-            du -sh .next/* 2>/dev/null || echo "Build artifacts generated" >> $GITHUB_STEP_SUMMARY
-            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          fi
-
-  # 🚀 Deploy to Server
   deploy:
-    name: 🚀 Deploy to Server
     runs-on: self-hosted
-    needs: test
-    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
-    environment: ${{ inputs.environment || 'production' }}
     
     steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: 📂 Deploy Frontend
-        run: |
-          set -e
-          
-          echo "🚀 Starting frontend deployment..."
-          
-          # Git 업데이트
-          echo "📥 Pulling latest code..."
-          git fetch origin
-          git reset --hard origin/main
-          
-          # Docker 빌드 및 배포
-          echo "🐳 Building and deploying with Docker..."
-          docker-compose down frontend || true
-          docker-compose build --no-cache frontend
-          docker-compose up -d frontend
-          
-          # 헬스 체크
-          echo "🔍 Health checking..."
-          sleep 10
-          
-          # Nginx 상태 확인
-          if docker-compose ps nginx | grep -q "Up"; then
-            echo "✅ Nginx is running"
-          else
-            echo "⚠️ Nginx not running, starting..."
-            docker-compose up -d nginx
-          fi
-          
-          # 전체 서비스 상태 확인
-          docker-compose ps
-          
-          echo "✅ Frontend deployment completed!"
+    - name: Deploy with Docker Compose
+      run: |
+        echo "🚀 Deploying frontend..."
+        docker compose up -d
+        echo "✅ Frontend deployment completed"
 
-      - name: 🔍 Verify Deployment
-        run: |
-          echo "🔍 Verifying deployment..."
-          sleep 15
-          
-          if curl -f http://localhost/health; then
-            echo "✅ Frontend is healthy"
-            echo "## 🎉 Deployment Success" >> $GITHUB_STEP_SUMMARY
-            echo "### Frontend deployed successfully!" >> $GITHUB_STEP_SUMMARY
-            echo "- **Environment**: ${{ inputs.environment || 'production' }}" >> $GITHUB_STEP_SUMMARY
-            echo "- **Status**: ✅ Healthy" >> $GITHUB_STEP_SUMMARY
-            echo "- **URL**: http://$(hostname -I | awk '{print $1}')" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "❌ Frontend health check failed"
-            echo "## ❌ Deployment Failed" >> $GITHUB_STEP_SUMMARY
-            echo "Health check failed. Please check server logs." >> $GITHUB_STEP_SUMMARY
-            exit 1
-          fi
-
-  # 🧹 Cleanup (선택사항)
-  cleanup:
-    name: 🧹 Cleanup Old Images
-    runs-on: self-hosted
-    needs: deploy
-    if: success() && github.ref == 'refs/heads/main'
-
-    steps:
-      - name: 🗑️ Remove unused images
-        run: |
-          echo "🧹 Cleaning up old Docker images..."
-          docker image prune -f
-          docker rmi $(docker images -f "dangling=true" -q) 2>/dev/null || echo "No dangling images found"
-          echo "✅ Frontend cleanup completed"
+    - name: Health Check
+      run: |
+        echo "🏥 Running health check..."
+        sleep 15
+        
+        # Check if container is running
+        if docker ps | grep -q recipe-frontend; then
+          echo "✅ Frontend container is running"
+          docker ps | grep recipe-frontend
+        else
+          echo "❌ Frontend container not found"
+          docker compose logs
+          exit 1
+        fi

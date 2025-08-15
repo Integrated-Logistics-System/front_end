@@ -10,9 +10,23 @@ const nextConfig = {
   
   // 🖼️ 이미지 최적화
   images: {
-    domains: process.env.NEXT_PUBLIC_IMAGE_DOMAINS?.split(',') || ['localhost', 'via.placeholder.com'],
+    domains: process.env.NEXT_PUBLIC_IMAGE_DOMAINS?.split(',') || ['choi1994.duckdns.org', 'localhost', 'via.placeholder.com'],
     unoptimized: process.env.NODE_ENV === 'development',
     formats: ['image/webp', 'image/avif'],
+    remotePatterns: [
+      {
+        protocol: 'http',
+        hostname: 'choi1994.duckdns.org',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '',
+        pathname: '/**',
+      }
+    ],
   },
   
   // 🌍 환경변수
