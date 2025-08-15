@@ -37,6 +37,9 @@ const ConnectionStatus = () => {
   };
 
   const formatUrl = (url: string) => {
+    if (typeof window === 'undefined') {
+      return url; // 서버사이드에서는 그대로 반환
+    }
     if (url.startsWith('/')) {
       return `${window.location.origin}${url}`;
     }
@@ -152,7 +155,7 @@ const ConnectionStatus = () => {
           <div className="mt-3 pt-3 border-t border-gray-200">
             <div className="text-xs text-gray-500 space-y-1">
               <div>ENV: {process.env.NODE_ENV}</div>
-              <div>Domain: {window.location.origin}</div>
+              <div>Domain: {typeof window !== 'undefined' ? window.location.origin : 'Server Side'}</div>
             </div>
           </div>
         </div>

@@ -39,11 +39,17 @@ export const useConnectionStatus = () => {
         api: { ...prev.api, status: 'checking' }
       }));
 
+      // 5초 타임아웃을 위한 AbortController
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
       const response = await fetch(`${config.api.baseUrl}/health`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
-        signal: AbortSignal.timeout(5000), // 5초 타임아웃
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
 
       const isConnected = response.ok;
       
