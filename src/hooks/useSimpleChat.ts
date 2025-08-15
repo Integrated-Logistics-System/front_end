@@ -31,22 +31,27 @@ export const useSimpleChat = () => {
 
     // 스트리밍 청크 리스너
     webSocketService.onConversationChunk((chunk: ConversationChunk) => {
-      // 스트리밍 중 연결 상태 체크
+      console.log('📥 청크 수신:', {
+        type: chunk.type,
+        content: chunk.content?.substring(0, 50) + '...',
+        connected: webSocketService.isConnected(),
+        timestamp: new Date().toISOString()
+      });
       
       if (chunk.type === 'typing') {
-        // Setting typing indicator
+        console.log('⌨️ AI 타이핑 시작');
         setStreamingMessage('AI가 입력 중...');
       } else if (chunk.type === 'token' && chunk.content) {
-        // Adding token
+        console.log('🔤 토큰 추가:', chunk.content);
         setStreamingMessage(prev => {
           const newMessage = prev + chunk.content;
-          // Current streaming message
+          console.log('📝 스트리밍 메시지 업데이트:', newMessage.length + '글자');
           return newMessage;
         });
         
-        // 토큰 수신 중 연결 상태 주기적 확인 (디버깅용)
+        // 토큰 수신 중 연결 상태 주기적 확인
         if (!webSocketService.isConnected()) {
-          // Connection lost during token streaming
+          console.warn('⚠️ 토큰 수신 중 연결 끊김 감지');
         }
       } else if ((chunk.type === 'content' && chunk.isComplete) || chunk.type === 'complete') {
         // 스트리밍 완료 - AI 메시지 추가
@@ -146,7 +151,12 @@ export const useSimpleChat = () => {
       cookingLevel: cookingLevel
     };
 
-    // Sending message via WebSocket
+    console.log('📤 메시지 전송:', {
+      message: text.trim(),
+      connected: webSocketService.isConnected(),
+      contextSize: recentMessages.length,
+      timestamp: new Date().toISOString()
+    });
     
     // WebSocket으로 메시지 전송 (컨텍스트 포함)
     webSocketService.sendMessage(text.trim(), undefined, context);
