@@ -13,6 +13,39 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Debug Environment Variables
+      run: |
+        echo "🔍 Checking frontend environment..."
+        echo "Working directory: $(pwd)"
+        echo "Current user: $(whoami)"
+        echo ""
+        echo "📁 Files in current directory:"
+        ls -la
+        echo ""
+        echo "📄 Environment files:"
+        echo "--- .env files ---"
+        for env_file in .env .env.local .env.production .env.development; do
+          if [ -f "$env_file" ]; then
+            echo "✅ $env_file found"
+            echo "Content of $env_file (secrets masked):"
+            sed 's/=.*/=***MASKED***/' "$env_file"
+            echo ""
+          else
+            echo "❌ $env_file not found"
+          fi
+        done
+        echo ""
+        echo "🐳 Docker compose configuration:"
+        docker compose config
+        echo ""
+        echo "🔧 Dockerfile check:"
+        if [ -f Dockerfile ]; then
+          echo "✅ Dockerfile found"
+          head -20 Dockerfile
+        else
+          echo "❌ Dockerfile not found"
+        fi
+
     - name: Deploy with Docker Compose
       run: |
         echo "🚀 Deploying frontend..."
