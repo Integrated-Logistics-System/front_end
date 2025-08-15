@@ -35,13 +35,13 @@ class WebSocketService {
 
     this.socket = io(socketUrl, {
       path: socketPath,
-      transports: ['polling', 'websocket'], // polling 먼저 시도
+      transports: ['websocket'], // WebSocket만 사용
       reconnectionAttempts: config.websocket.reconnectAttempts,
       reconnectionDelay: config.websocket.reconnectDelay,
       timeout: config.websocket.timeout,
       autoConnect: true,
       forceNew: false,
-      upgrade: true,
+      upgrade: false, // 업그레이드 비활성화
     });
 
     this.socket.on('connect', () => {
@@ -54,7 +54,11 @@ class WebSocketService {
     });
 
     this.socket.on('disconnect', (reason) => {
-      console.log('🔌 WebSocket 연결 끊김:', reason);
+      console.log('🔌 WebSocket 연결 끊김:', reason, {
+        timestamp: new Date().toISOString(),
+        socketId: this.socket?.id,
+        transport: this.socket?.io?.engine?.transport?.name
+      });
       this.stopPingInterval();
     });
 

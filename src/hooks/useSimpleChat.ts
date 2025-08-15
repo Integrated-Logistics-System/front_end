@@ -107,7 +107,7 @@ export const useSimpleChat = () => {
       webSocketService.removeAllListeners();
       webSocketService.disconnect();
     };
-  }, [setConnectionStatus, setMessages, setStreamingMessage, streamingMessage]);
+  }, [setConnectionStatus, setMessages, setStreamingMessage]);
 
   // 메시지 전송
   const sendMessage = useCallback(async (text: string) => {
