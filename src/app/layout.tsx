@@ -26,9 +26,6 @@ export default function RootLayout({
         <Providers>
           {children}
           <SimpleConnectionStatus />
-          <div style={{position: 'fixed', top: '10px', left: '10px', background: 'blue', color: 'white', padding: '10px', zIndex: 9999}}>
-            LAYOUT TEST
-          </div>
         </Providers>
       </body>
     </html>
