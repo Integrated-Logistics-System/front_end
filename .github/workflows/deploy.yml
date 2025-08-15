@@ -49,7 +49,10 @@ jobs:
     - name: Deploy with Docker Compose
       run: |
         echo "🚀 Deploying frontend..."
-        docker compose up -d
+        echo "🔄 Stopping existing containers..."
+        docker compose down
+        echo "🏗️ Building and starting new containers..."
+        docker compose up -d --build
         echo "✅ Frontend deployment completed"
 
     - name: Health Check
