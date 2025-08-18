@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Send, ChefHat, Trash2, Clock, Settings, Wifi, WifiOff, Shield } from 'lucide-react';
+import { Send, ChefHat, Trash2, Clock, Settings, Wifi, WifiOff, Shield, Brain, Zap } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useSimpleChat } from '@/hooks/useSimpleChat';
@@ -15,6 +15,7 @@ export default function SimpleChatPage() {
   const [showAllergySettings, setShowAllergySettings] = useState(false);
   const [showCookingLevelSettings, setShowCookingLevelSettings] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [isReactMode, setIsReactMode] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const { messages, streamingMessage, sendMessage, clearChat, isStreaming } = useSimpleChat();
@@ -36,7 +37,7 @@ export default function SimpleChatPage() {
 
   const handleSendMessage = () => {
     if (!input.trim()) return;
-    sendMessage(input);
+    sendMessage(input, isReactMode);
     setInput('');
   };
 
@@ -90,6 +91,38 @@ export default function SimpleChatPage() {
                   <div className="text-sm font-medium text-red-300">백엔드 연결 끊김</div>
                   <div className="text-xs text-red-400/70">재연결 시도 중...</div>
                 </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* ReAct Mode Toggle */}
+        <div className="mb-6 p-4 bg-black/20 rounded-lg border border-purple-500/20">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-medium text-purple-300">AI 추론 모드</h3>
+            <button
+              onClick={() => setIsReactMode(!isReactMode)}
+              className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 ${
+                isReactMode ? 'bg-purple-600' : 'bg-gray-600'
+              }`}
+            >
+              <span
+                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                  isReactMode ? 'translate-x-5' : 'translate-x-0'
+                }`}
+              />
+            </button>
+          </div>
+          <div className="flex items-center gap-2 text-xs">
+            {isReactMode ? (
+              <>
+                <Brain className="h-4 w-4 text-purple-400" />
+                <span className="text-purple-200">ReAct: 단계별 추론 과정 표시</span>
+              </>
+            ) : (
+              <>
+                <Zap className="h-4 w-4 text-gray-400" />
+                <span className="text-gray-300">일반: 빠른 응답</span>
               </>
             )}
           </div>

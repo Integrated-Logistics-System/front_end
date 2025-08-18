@@ -2,15 +2,19 @@
 
 import { cn } from '@/lib/utils';
 import { ChatMessage as IChatMessage } from '@/types/chat.types';
+import { ReactStep } from '@/types/websocket.types';
 import { motion } from 'framer-motion';
-import { User, Bot, Clock, Zap } from 'lucide-react';
+import { User, Bot, Clock, Zap, Brain } from 'lucide-react';
 import { MarkdownRenderer } from '@/components/ui/MarkdownRenderer';
 import { RecipeDetailCard } from '@/components/chat/RecipeDetailCard';
 import { parseRecipeMarkdown, isRecipeMarkdown } from '@/utils/recipeMarkdownParser';
 import { useState, useEffect } from 'react';
 
 interface ChatMessageProps {
-  message: IChatMessage;
+  message: IChatMessage & {
+    reactSteps?: ReactStep[];
+    isReactComplete?: boolean;
+  };
   isLast?: boolean;
 }
 
@@ -94,8 +98,27 @@ export function ChatMessage({ message, isLast }: ChatMessageProps) {
             )}
           />
 
+          {/* ReAct 단계들 (AI 메시지에만 표시) */}
+          {!isUser && message.reactSteps && message.reactSteps.length > 0 && (
+            <div className="mb-4 space-y-2">
+              <div className="flex items-center gap-2 text-xs font-medium text-purple-600 dark:text-purple-400 mb-3">
+                <Brain className="w-4 h-4" />
+                <span>AI 추론 과정</span>
+              </div>
+              {message.reactSteps.map((step, index) => (
+                <ReactStepComponent key={index} step={step} stepNumber={index + 1} />
+              ))}
+            </div>
+          )}
+
           {/* 메시지 내용 */}
           <div className="text-sm leading-relaxed">
+            {!isUser && message.reactSteps && message.reactSteps.length > 0 && (
+              <div className="flex items-center gap-2 text-xs font-medium text-green-600 dark:text-green-400 mb-2 border-t border-gray-200 dark:border-gray-600 pt-3">
+                <Zap className="w-4 h-4" />
+                <span>최종 답변</span>
+              </div>
+            )}
             {isUser ? (
               <p className="whitespace-pre-wrap break-words">{message.content}</p>
             ) : (
@@ -343,3 +366,61 @@ export function ChatMessage({ message, isLast }: ChatMessageProps) {
     </MotionDiv>
   );
 }
+
+/**
+ * 개별 ReAct 단계 컴포넌트
+ */
+interface ReactStepComponentProps {
+  step: ReactStep;
+  stepNumber: number;
+}
+
+const ReactStepComponent: React.FC<ReactStepComponentProps> = ({ step, stepNumber }) => {
+  const getStepIcon = (type: string) => {
+    switch (type) {
+      case 'thought': return '💭';
+      case 'action': return '🔧';
+      case 'observation': return '📊';
+      default: return '🤖';
+    }
+  };
+
+  const getStepColor = (type: string) => {
+    switch (type) {
+      case 'thought': return 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700';
+      case 'action': return 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700';
+      case 'observation': return 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-700';
+      default: return 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600';
+    }
+  };
+
+  const getStepLabel = (type: string) => {
+    switch (type) {
+      case 'thought': return '분석';
+      case 'action': return '도구 사용';
+      case 'observation': return '결과 확인';
+      default: return type;
+    }
+  };
+
+  return (
+    <div className={`
+      p-3 rounded-lg border text-xs transition-all duration-200 hover:shadow-sm
+      ${getStepColor(step.type)}
+    `}>
+      <div className="flex items-center space-x-2 mb-2">
+        <span className="text-sm">{getStepIcon(step.type)}</span>
+        <span className="font-medium">
+          {getStepLabel(step.type)} #{stepNumber}
+        </span>
+        <div className="flex-1" />
+        <span className="text-gray-500 text-xs">
+          {new Date(step.timestamp).toLocaleTimeString()}
+        </span>
+      </div>
+      <div className="prose prose-xs max-w-none dark:prose-invert">
+        <MarkdownRenderer content={step.content} />
+      </div>
+    </div>
+  );
+};

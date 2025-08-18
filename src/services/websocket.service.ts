@@ -1,5 +1,5 @@
 import { io, Socket } from 'socket.io-client';
-import { ConnectionStatus, SocketError, ConversationChunk, ConversationHistory, ConversationResponse } from '@/types/websocket.types';
+import { ConnectionStatus, SocketError, ConversationChunk, ConversationHistory, ConversationResponse, ReactChunk } from '@/types/websocket.types';
 import { config } from '@/lib/config';
 
 class WebSocketService {
@@ -126,6 +126,16 @@ class WebSocketService {
     });
   }
 
+  // ReAct 메시지 전송
+  sendReactMessage(message: string, sessionId?: string, context?: { history?: any[], allergies?: string[], cookingLevel?: string }) {
+    if (!this.socket) return;
+    this.socket.emit('conversation_react_stream', { 
+      message, 
+      sessionId,
+      context
+    });
+  }
+
   getHistory() {
     if (!this.socket) return;
     this.socket.emit('conversation_get_history');
@@ -151,6 +161,11 @@ class WebSocketService {
   onError(callback: (error: SocketError) => void) {
     this.socket?.on('error', callback);
     this.socket?.on('conversation_error', callback);
+  }
+
+  // ReAct 관련 이벤트 리스너
+  onReactChunk(callback: (chunk: ReactChunk) => void) {
+    this.socket?.on('react_chunk', callback);
   }
   
   // --- Connection Status ---
