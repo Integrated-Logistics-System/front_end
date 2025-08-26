@@ -119,6 +119,12 @@ class WebSocketService {
   // --- Event Emitters ---
   sendMessage(message: string, sessionId?: string, context?: { history?: any[], allergies?: string[], cookingLevel?: string }) {
     if (!this.socket) return;
+    console.log('📤 [Frontend] Sending conversation_stream:', {
+      message: message.substring(0, 50) + '...',
+      sessionId,
+      connected: this.socket.connected,
+      contextSize: context?.history?.length || 0
+    });
     this.socket.emit('conversation_stream', { 
       message, 
       sessionId,
@@ -129,6 +135,12 @@ class WebSocketService {
   // ReAct 메시지 전송
   sendReactMessage(message: string, sessionId?: string, context?: { history?: any[], allergies?: string[], cookingLevel?: string }) {
     if (!this.socket) return;
+    console.log('🧠 [Frontend] Sending conversation_react_stream:', {
+      message: message.substring(0, 50) + '...',
+      sessionId,
+      connected: this.socket.connected,
+      contextSize: context?.history?.length || 0
+    });
     this.socket.emit('conversation_react_stream', { 
       message, 
       sessionId,
@@ -147,11 +159,24 @@ class WebSocketService {
   }
 
   onConversationChunk(callback: (chunk: ConversationChunk) => void) {
-    this.socket?.on('conversation_chunk', callback);
+    this.socket?.on('conversation_chunk', (chunk) => {
+      console.log('📥 [Frontend] Received conversation_chunk:', {
+        type: chunk.type,
+        content: chunk.content?.substring(0, 50) + '...',
+        timestamp: new Date().toISOString()
+      });
+      callback(chunk);
+    });
   }
   
   onConversationResponse(callback: (response: ConversationResponse) => void) {
-    this.socket?.on('conversation_response', callback);
+    this.socket?.on('conversation_response', (response) => {
+      console.log('📥 [Frontend] Received conversation_response:', {
+        content: response.content?.substring(0, 50) + '...',
+        timestamp: response.timestamp
+      });
+      callback(response);
+    });
   }
 
   onConversationHistory(callback: (history: ConversationHistory) => void) {
@@ -165,7 +190,14 @@ class WebSocketService {
 
   // ReAct 관련 이벤트 리스너
   onReactChunk(callback: (chunk: ReactChunk) => void) {
-    this.socket?.on('react_chunk', callback);
+    this.socket?.on('react_chunk', (chunk) => {
+      console.log('🧠 [Frontend] Received react_chunk:', {
+        type: chunk.type,
+        content: chunk.content?.substring(0, 50) + '...',
+        timestamp: new Date().toISOString()
+      });
+      callback(chunk);
+    });
   }
   
   // --- Connection Status ---

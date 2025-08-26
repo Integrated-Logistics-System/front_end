@@ -115,7 +115,7 @@ export const useSimpleChat = () => {
 
     // ReAct 청크 리스너
     webSocketService.onReactChunk((chunk: ReactChunk) => {
-      console.log('🧠 ReAct 청크 수신:', chunk.type);
+      console.log('🧠 ReAct 청크 수신:', chunk.type, 'reactMessageRef.current:', !!reactMessageRef.current);
       
       switch (chunk.type) {
         case 'react_start':
@@ -138,28 +138,62 @@ export const useSimpleChat = () => {
         case 'thought':
         case 'action':
         case 'observation':
-          // ReAct 단계 추가
-          if (reactMessageRef.current) {
-            const step: ReactStep = {
-              type: chunk.type,
-              content: chunk.content,
-              timestamp: chunk.timestamp,
-              stepNumber: (reactMessageRef.current.reactSteps?.length || 0) + 1,
-            };
-
-            const updatedMessage = {
-              ...reactMessageRef.current,
-              reactSteps: [...(reactMessageRef.current.reactSteps || []), step],
+          // ReAct 메시지가 없으면 새로 생성 (react_start 없이 바로 시작되는 경우)
+          if (!reactMessageRef.current) {
+            const newReactMessage = {
+              id: `react-${Date.now()}`,
+              type: 'ai' as const,
+              text: '',
+              timestamp: new Date().toISOString(),
+              reactSteps: [],
+              isReactComplete: false,
+              isStreaming: true,
             };
             
-            reactMessageRef.current = updatedMessage;
-            setCurrentReactMessage({ ...updatedMessage });
+            reactMessageRef.current = newReactMessage;
+            setCurrentReactMessage(newReactMessage);
+            setStreamingMessage('🧠 AI가 단계별로 분석 중...');
           }
+
+          // ReAct 단계 추가
+          const step: ReactStep = {
+            type: chunk.type,
+            content: chunk.content,
+            timestamp: chunk.timestamp,
+            stepNumber: (reactMessageRef.current.reactSteps?.length || 0) + 1,
+          };
+
+          const updatedMessage = {
+            ...reactMessageRef.current,
+            reactSteps: [...(reactMessageRef.current.reactSteps || []), step],
+          };
+          
+          reactMessageRef.current = updatedMessage;
+          setCurrentReactMessage({ ...updatedMessage });
           break;
 
         case 'final_answer':
-          // ReAct 최종 답변
-          if (reactMessageRef.current) {
+          // ReAct 메시지가 없으면 새로 생성 (react_start 없이 바로 final_answer가 오는 경우)
+          if (!reactMessageRef.current) {
+            const newReactMessage = {
+              id: `react-${Date.now()}`,
+              type: 'ai' as const,
+              text: chunk.content || '',
+              timestamp: new Date().toISOString(),
+              reactSteps: [],
+              isReactComplete: true,
+              isStreaming: false,
+              metadata: chunk.metadata,
+            };
+            
+            // 메시지 목록에 바로 추가
+            console.log('📝 ReAct final_answer 메시지 추가 (신규):', newReactMessage);
+            setMessages(prev => [...prev, newReactMessage]);
+            setCurrentReactMessage(null);
+            setStreamingMessage('');
+            reactMessageRef.current = null;
+          } else {
+            // 기존 ReAct 메시지가 있는 경우
             const finalMessage = {
               ...reactMessageRef.current,
               text: chunk.content,
@@ -169,6 +203,7 @@ export const useSimpleChat = () => {
             };
 
             // 메시지 목록에 추가
+            console.log('📝 ReAct final_answer 메시지 추가 (기존):', finalMessage);
             setMessages(prev => [...prev, finalMessage]);
             
             // ReAct 상태 초기화
